@@ -1,0 +1,14 @@
+name = "ethioparts"
+main = ".open-next/worker.js"
+compatibility_date = "2026-08-15"
+
+[vars]
+ENVIRONMENT = "production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ethioparts-db"
+database_id = "ethioparts-d1-database-id"
+
+[site]
+bucket = ".open-next/assets"

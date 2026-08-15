@@ -1,0 +1,6 @@
+tree fdb980df59b535344d0c70616326b298bad7bd3e
+parent ad42d53ab668274f14a12f4079ee86a446ebca85
+author EthioParts Dev <mjamee21@users.noreply.github.com> 1786757209 +0300
+committer EthioParts Dev <mjamee21@users.noreply.github.com> 1786757209 +0300
+
+Update static export build and push to GitHub for Cloudflare and GitHub Pages automated deployment
