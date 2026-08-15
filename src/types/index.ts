@@ -4,10 +4,13 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  username?: string;
+  password?: string;
   role: UserRole;
   merchantId?: string; // If role is merchant
   status?: 'active' | 'pending' | 'suspended';
   phone?: string;
+  verified?: boolean;
   joinedDate?: string;
 }
 
@@ -22,7 +25,7 @@ export interface Merchant {
   rating: number;
   totalProducts: number;
   joinedDate: string;
-  paymentAccounts?: Record<string, { accountNumber: string; accountName: string }>; // Merchant specific account details for payment methods
+  paymentAccounts?: Record<string, { accountNumber: string; accountName: string }>;
 }
 
 export interface PaymentMethodConfig {
@@ -31,7 +34,7 @@ export interface PaymentMethodConfig {
   code: string;
   type: 'mobile_money' | 'bank_transfer';
   accountName: string;
-  accountNumber: string; // or phone number (default fallback)
+  accountNumber: string; // or phone number
   instructions: string;
   enabled: boolean; // Global admin toggle
   logoBg: string;
