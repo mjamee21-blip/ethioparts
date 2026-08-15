@@ -48,7 +48,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS[0]); // Default to Admin
+  // Default to guest visitor (no dashboards shown until login)
+  const [currentUser, setCurrentUser] = useState<User>({
+    id: 'guest',
+    name: 'Guest Visitor',
+    email: 'guest@ethioparts.et',
+    role: 'guest',
+    verified: false
+  });
   const [activeTab, setActiveTab] = useState<string>('home');
 
   // Load from LocalStorage if available
@@ -95,6 +102,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         role,
         merchantId: merchantId || (role === 'merchant' ? 'mch-1' : undefined),
         phone: '+251 91 000 1122',
+        verified: true,
         joinedDate: new Date().toISOString().split('T')[0]
       };
       setUsers(prev => [...prev, newUser]);

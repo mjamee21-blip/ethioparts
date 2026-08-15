@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { X, Lock, Mail, User, ShieldCheck, Store, UserCheck, ArrowRight, CheckCircle2, KeyRound } from 'lucide-react';
-import { UserRole } from '@/types';
+import { UserRole, User as UserType } from '@/types';
 
 export const AuthModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const { users, switchUserRole, setActiveTab } = useApp();
@@ -27,7 +27,6 @@ export const AuthModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ 
     e.preventDefault();
     setError('');
 
-    // Check against explicit credentials or existing users
     if (usernameOrEmail === 'siris888' && password === 'Passw0rd') {
       switchUserRole('admin');
       setActiveTab('admin');
@@ -67,19 +66,52 @@ export const AuthModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ 
       return;
     }
     setMode('verify');
-    setSuccessMsg(`Verification code sent to ${regEmail}. Please enter '123456' to verify your account.`);
+    setSuccessMsg(`Verification email dispatched to ${regEmail}. Please enter verification code '123456'.`);
   };
 
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
     if (verificationCode === '123456') {
-      alert('Email verified successfully! Your account has been saved to the database.');
-      switchUserRole(regRole, regRole === 'merchant' ? 'mch-1' : undefined);
+      const newUser: UserType = {
+        id: `usr-${Date.now()}`,
+        name: regName,
+        email: regEmail,
+        username: regEmail.split('@')[0],
+        password: regPassword,
+        role: regRole,
+        merchantId: regRole === 'merchant' ? `mch-${Date.now()}` : undefined,
+        verified: true,
+        joinedDate: new Date().toISOString().split('T')[0]
+      };
+      users.push(newUser);
+      switchUserRole(regRole, newUser.merchantId);
       setActiveTab(regRole === 'merchant' ? 'merchant' : 'home');
+      alert('Email verified successfully! Welcome to EthioParts.');
       onClose();
     } else {
       setError('Invalid verification code. Enter 123456 for simulation.');
     }
+  };
+
+  const handleGoogleRegistration = () => {
+    const googleName = 'Google User (' + Math.floor(100 + Math.random() * 900) + ')';
+    const googleEmail = 'googleuser' + Math.floor(1000 + Math.random() * 9000) + '@gmail.com';
+    const newUser: UserType = {
+      id: `usr-${Date.now()}`,
+      name: googleName,
+      email: googleEmail,
+      username: googleEmail.split('@')[0],
+      password: 'google-oauth-secure',
+      role: regRole,
+      merchantId: regRole === 'merchant' ? `mch-${Date.now()}` : undefined,
+      verified: true,
+      joinedDate: new Date().toISOString().split('T')[0]
+    };
+    users.push(newUser);
+    switchUserRole(regRole, newUser.merchantId);
+    setActiveTab(regRole === 'merchant' ? 'merchant' : 'home');
+    alert(`Successfully registered and logged in with Google as ${googleEmail}!`);
+    onClose();
   };
 
   const fillCredentials = (user: string, pass: string) => {
@@ -256,12 +288,7 @@ export const AuthModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ 
             {/* Google Signup Simulation */}
             <button
               type="button"
-              onClick={() => {
-                alert('Google Sign-Up simulated successfully! User saved to database.');
-                switchUserRole('buyer');
-                setActiveTab('home');
-                onClose();
-              }}
+              onClick={handleGoogleRegistration}
               className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-medium transition flex items-center justify-center gap-2 border border-slate-700"
             >
               <span className="font-bold text-amber-400">G</span> Sign up instantly with Google
