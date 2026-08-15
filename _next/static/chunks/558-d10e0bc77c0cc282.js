@@ -1,9 +1,9 @@
-"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[826],{1066:function(e,t,n){n.d(t,{Z:function(){return y}});var r=n(2265),c={xmlns:"http://www.w3.org/2000/svg",width:24,height:24,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"};/**
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[558],{1066:function(e,t,n){n.d(t,{Z:function(){return y}});var r=n(2265),c={xmlns:"http://www.w3.org/2000/svg",width:24,height:24,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"};/**
  * @license lucide-react v0.309.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */let i=e=>e.replace(/([a-z0-9])([A-Z])/g,"$1-$2").toLowerCase().trim(),y=(e,t)=>{let n=(0,r.forwardRef)((n,y)=>{let{color:a="currentColor",size:h=24,strokeWidth:u=2,absoluteStrokeWidth:o,className:l="",children:d,...k}=n;return(0,r.createElement)("svg",{ref:y,...c,width:h,height:h,stroke:a,strokeWidth:o?24*Number(u)/Number(h):u,className:["lucide","lucide-".concat(i(e)),l].join(" "),...k},[...t.map(e=>{let[t,n]=e;return(0,r.createElement)(t,n)}),...Array.isArray(d)?d:[d]])});return n.displayName="".concat(e),n}},1976:function(e,t,n){n.d(t,{Z:function(){return r}});/**
+ */let i=e=>e.replace(/([a-z0-9])([A-Z])/g,"$1-$2").toLowerCase().trim(),y=(e,t)=>{let n=(0,r.forwardRef)((n,y)=>{let{color:u="currentColor",size:a=24,strokeWidth:o=2,absoluteStrokeWidth:h,className:l="",children:d,...k}=n;return(0,r.createElement)("svg",{ref:y,...c,width:a,height:a,stroke:u,strokeWidth:h?24*Number(o)/Number(a):o,className:["lucide","lucide-".concat(i(e)),l].join(" "),...k},[...t.map(e=>{let[t,n]=e;return(0,r.createElement)(t,n)}),...Array.isArray(d)?d:[d]])});return n.displayName="".concat(e),n}},1976:function(e,t,n){n.d(t,{Z:function(){return r}});/**
  * @license lucide-react v0.309.0 - ISC
  *
  * This source code is licensed under the ISC license.
@@ -63,7 +63,12 @@
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */let r=(0,n(1066).Z)("LayoutDashboard",[["rect",{width:"7",height:"9",x:"3",y:"3",rx:"1",key:"10lvy0"}],["rect",{width:"7",height:"5",x:"14",y:"3",rx:"1",key:"16une8"}],["rect",{width:"7",height:"9",x:"14",y:"12",rx:"1",key:"1hutg5"}],["rect",{width:"7",height:"5",x:"3",y:"16",rx:"1",key:"ldoo1y"}]])},7524:function(e,t,n){n.d(t,{Z:function(){return r}});/**
+ */let r=(0,n(1066).Z)("LayoutDashboard",[["rect",{width:"7",height:"9",x:"3",y:"3",rx:"1",key:"10lvy0"}],["rect",{width:"7",height:"5",x:"14",y:"3",rx:"1",key:"16une8"}],["rect",{width:"7",height:"9",x:"14",y:"12",rx:"1",key:"1hutg5"}],["rect",{width:"7",height:"5",x:"3",y:"16",rx:"1",key:"ldoo1y"}]])},2873:function(e,t,n){n.d(t,{Z:function(){return r}});/**
+ * @license lucide-react v0.309.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */let r=(0,n(1066).Z)("Menu",[["line",{x1:"4",x2:"20",y1:"12",y2:"12",key:"1e0a9i"}],["line",{x1:"4",x2:"20",y1:"6",y2:"6",key:"1owob3"}],["line",{x1:"4",x2:"20",y1:"18",y2:"18",key:"yk5zj1"}]])},7524:function(e,t,n){n.d(t,{Z:function(){return r}});/**
  * @license lucide-react v0.309.0 - ISC
  *
  * This source code is licensed under the ISC license.
