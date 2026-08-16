@@ -2,18 +2,35 @@
 
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Store, Package, Plus, DollarSign, Clock, CheckCircle2, Truck, CreditCard, Edit, Trash2, X, Check, Phone, Settings, ToggleLeft, ToggleRight } from 'lucide-react';
-import { Product } from '@/types';
+import { Store, Package, Plus, DollarSign, Clock, CheckCircle2, XCircle, Truck, CreditCard, Edit, Trash2, X, Check, Phone, Settings, AlertCircle } from 'lucide-react';
+import { Product, Order } from '@/types';
 
 export const MerchantDashboard: React.FC = () => {
-  const { currentUser, merchants, products, orders, paymentMethods, addProduct, updateProduct, deleteProduct, updateFulfillmentStatus, updateMerchantPaymentAccount } = useApp();
+  const { 
+    currentUser, 
+    merchants, 
+    products, 
+    orders, 
+    paymentMethods, 
+    adminCommissionPaymentMethodId,
+    payOrderCommission,
+    addProduct, 
+    updateProduct, 
+    deleteProduct, 
+    updateFulfillmentStatus, 
+    updateMerchantPaymentAccount, 
+    verifyOrderReceipt 
+  } = useApp();
 
   const merchant = merchants.find(m => m.id === currentUser.merchantId) || merchants[0];
   const merchantProducts = products.filter(p => p.merchantId === merchant.id);
   const merchantOrders = orders.filter(o => o.items.some(item => item.merchantId === merchant.id));
 
+  const adminPM = paymentMethods.find(p => p.id === adminCommissionPaymentMethodId);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [selectedReceipt, setSelectedReceipt] = useState<{ orderId: string; imageUrl: string; buyerName: string; totalAmount: number; paymentMethod: string } | null>(null);
 
   // Form state for product CRUD
   const [name, setName] = useState('');
@@ -126,13 +143,17 @@ export const MerchantDashboard: React.FC = () => {
     updateMerchantPaymentAccount(merchant.id, pmId, updated.accountNumber, updated.accountName);
   };
 
+  // Commission calculations (10% owed to admin within 3 days)
+  const merchantVerifiedOrders = merchantOrders.filter(o => o.paymentStatus === 'verified');
+  const totalCommissionOwed = merchantVerifiedOrders.reduce((sum, o) => sum + o.commission, 0);
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 animate-fadeIn">
       {/* Merchant Header */}
       <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 text-amber-500 font-mono text-xs uppercase tracking-wider mb-1">
-            <Store className="w-4 h-4" /> Merchant Portal • {merchant.city}
+            <Store className="w-4 h-4" /> Merchant Portal (Payment Verifier & Store Owner) • {merchant.city}
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-white">{merchant.name}</h1>
           <p className="text-slate-400 text-sm mt-1">Owner: {merchant.ownerName} | Rating: ★ {merchant.rating} ({merchantProducts.length} Active Parts)</p>
@@ -145,7 +166,52 @@ export const MerchantDashboard: React.FC = () => {
         </button>
       </div>
 
-      {/* REDESIGNED STORE PAYMENT METHODS WITH CLEAR ON/OFF TOGGLES & ACCOUNT INPUTS */}
+      {/* COMMISSION & 3-DAY PAYOUT TO ADMIN NOTICE */}
+      <div className="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-950 border border-amber-500/30 rounded-2xl p-6 shadow-xl space-y-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-amber-400 font-mono text-xs font-bold uppercase">
+              <AlertCircle className="w-4 h-4" /> Platform 10% Commission (3-Day Max Remittance Window)
+            </div>
+            <h3 className="text-lg font-bold text-white">Total Commission Owed to Website Owner: <span className="text-amber-400">ETB {totalCommissionOwed.toLocaleString()}</span></h3>
+            <p className="text-xs text-slate-400">
+              Per platform policy, you must remit the 10% website commission within 3 days of receiving customer funds to the designated admin payout account below.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              const unpaidOrders = merchantVerifiedOrders.filter(o => o.commissionStatus !== 'paid');
+              if (unpaidOrders.length === 0) {
+                alert('All verified orders have already had their 10% commission remitted to admin.');
+                return;
+              }
+              const txRef = prompt(`Enter Transaction Reference / Receipt Number for payment to Admin (${adminPM?.name} - ${adminPM?.accountNumber}):`, `TX-${Math.floor(100000 + Math.random() * 900000)}`);
+              if (txRef) {
+                unpaidOrders.forEach(ord => payOrderCommission(ord.id, txRef));
+                alert(`Successfully remitted 10% commission for ${unpaidOrders.length} order(s) to admin via ${adminPM?.name}. Supervision ledger updated!`);
+              }
+            }}
+            className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-emerald-600/20 flex items-center gap-2 flex-shrink-0"
+          >
+            <CheckCircle2 className="w-4 h-4" /> Remit 10% Commission to Admin
+          </button>
+        </div>
+
+        {/* Admin Selected Commission Payment Method Box */}
+        <div className="bg-slate-950 p-4 rounded-xl border border-amber-500/40 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="text-amber-400 font-bold uppercase tracking-wider text-[11px]">Admin-Selected Commission Payment Method:</div>
+            <div className="text-white font-extrabold text-sm">{adminPM?.name || 'Telebirr'} ({adminPM?.type?.replace('_', ' ')})</div>
+            <div className="text-slate-400">{adminPM?.instructions}</div>
+          </div>
+          <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 text-right space-y-0.5 flex-shrink-0">
+            <div className="text-slate-400">Account Name: <strong className="text-white">{adminPM?.accountName}</strong></div>
+            <div className="text-slate-400">Account / Phone: <strong className="text-amber-400 font-mono text-sm">{adminPM?.accountNumber}</strong></div>
+          </div>
+        </div>
+      </div>
+
+      {/* STORE PAYMENT METHODS CONFIGURATION */}
       <div className="bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-amber-500/40 rounded-2xl p-6 md:p-8 shadow-2xl space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
           <div>
@@ -185,7 +251,6 @@ export const MerchantDashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Toggle On/Off Switch */}
                   <button
                     type="button"
                     onClick={() => handleToggleMerchantPm(pm.id)}
@@ -254,7 +319,7 @@ export const MerchantDashboard: React.FC = () => {
             <Clock className="w-5 h-5 text-amber-500" />
           </div>
           <div className="text-2xl font-bold text-white">{merchantOrders.length} Orders</div>
-          <p className="text-xs text-amber-400 mt-1">Fulfillment processing</p>
+          <p className="text-xs text-amber-400 mt-1">Merchant receipt verification required</p>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
@@ -327,11 +392,11 @@ export const MerchantDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Order Processing */}
+        {/* Order Processing & Merchant Receipt Verification */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <Truck className="w-5 h-5 text-amber-500" /> Order Processing
+              <Truck className="w-5 h-5 text-amber-500" /> Order Processing & Verification
             </h2>
             <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-bold">{merchantOrders.length}</span>
           </div>
@@ -362,20 +427,59 @@ export const MerchantDashboard: React.FC = () => {
                         <span className="font-bold">ETB {(item.price * item.quantity).toLocaleString()}</span>
                       </div>
                     ))}
+                    <div className="border-t border-slate-800 pt-1 mt-1 flex justify-between text-amber-400 font-bold">
+                      <span>10% Commission Owed to Admin:</span>
+                      <span>ETB {order.commission.toLocaleString()}</span>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-xs text-slate-400">Fulfillment:</span>
-                    <select
-                      value={order.fulfillmentStatus}
-                      onChange={(e) => updateFulfillmentStatus(order.id, e.target.value as any)}
-                      className="bg-slate-900 border border-slate-700 text-xs text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-bold"
+                  <div className="space-y-2 pt-1">
+                    <button
+                      onClick={() => setSelectedReceipt({
+                        orderId: order.id,
+                        imageUrl: order.receiptImage || '',
+                        buyerName: order.buyerName,
+                        totalAmount: order.totalAmount,
+                        paymentMethod: order.selectedPaymentMethodName
+                      })}
+                      className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-bold rounded-lg border border-slate-700 transition"
                     >
-                      <option value="processing">Processing</option>
-                      <option value="shipped">Shipped</option>
-                      <option value="delivered">Delivered</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
+                      View Buyer Payment Receipt
+                    </button>
+
+                    {order.paymentStatus === 'pending_verification' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => verifyOrderReceipt(order.id, 'verified')}
+                          className="py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow"
+                        >
+                          Verify Payment
+                        </button>
+                        <button
+                          onClick={() => {
+                            const reason = prompt('Enter rejection reason:', 'Invalid receipt screenshot.');
+                            if (reason !== null) verifyOrderReceipt(order.id, 'rejected', reason);
+                          }}
+                          className="py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition shadow"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-xs text-slate-400">Fulfillment:</span>
+                      <select
+                        value={order.fulfillmentStatus}
+                        onChange={(e) => updateFulfillmentStatus(order.id, e.target.value as any)}
+                        className="bg-slate-900 border border-slate-700 text-xs text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-bold"
+                      >
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               ))
@@ -547,6 +651,60 @@ export const MerchantDashboard: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* RECEIPT MODAL VIEWER */}
+      {selectedReceipt && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <span className="text-xs font-mono text-amber-400">{selectedReceipt.orderId}</span>
+                <h3 className="text-lg font-bold text-white">Buyer Receipt Verification</h3>
+              </div>
+              <button 
+                onClick={() => setSelectedReceipt(null)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-1">
+              <div><span className="text-slate-400">Buyer:</span> <strong className="text-white">{selectedReceipt.buyerName}</strong></div>
+              <div><span className="text-slate-400">Payment Gateway:</span> <strong className="text-amber-400">{selectedReceipt.paymentMethod}</strong></div>
+              <div><span className="text-slate-400">Total Amount:</span> <strong className="text-emerald-400">ETB {selectedReceipt.totalAmount.toLocaleString()}</strong></div>
+            </div>
+
+            <div className="border border-slate-800 rounded-xl overflow-hidden bg-black flex items-center justify-center h-72">
+              <img src={selectedReceipt.imageUrl} alt="Receipt Screenshot" className="max-h-full max-w-full object-contain" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                onClick={() => {
+                  verifyOrderReceipt(selectedReceipt.orderId, 'verified');
+                  setSelectedReceipt(null);
+                }}
+                className="py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
+              >
+                <Check className="w-4 h-4" /> Verify Payment
+              </button>
+              <button
+                onClick={() => {
+                  const reason = prompt('Enter rejection reason:', 'Invalid receipt screenshot.');
+                  if (reason !== null) {
+                    verifyOrderReceipt(selectedReceipt.orderId, 'rejected', reason);
+                    setSelectedReceipt(null);
+                  }
+                }}
+                className="py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-red-600/20 flex items-center justify-center gap-2"
+              >
+                <X className="w-4 h-4" /> Reject Receipt
+              </button>
+            </div>
           </div>
         </div>
       )}

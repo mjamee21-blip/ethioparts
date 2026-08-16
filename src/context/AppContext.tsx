@@ -14,6 +14,8 @@ interface AppContextType {
   users: User[];
   merchants: Merchant[];
   paymentMethods: PaymentMethodConfig[];
+  adminCommissionPaymentMethodId: string;
+  setAdminCommissionPaymentMethodId: (id: string) => void;
   categories: Category[];
   products: Product[];
   orders: Order[];
@@ -23,6 +25,7 @@ interface AppContextType {
   switchUserRole: (role: UserRole, merchantId?: string) => void;
   togglePaymentMethod: (id: string) => void;
   verifyOrderReceipt: (orderId: string, status: 'verified' | 'rejected', reason?: string) => void;
+  payOrderCommission: (orderId: string, txRef?: string) => void;
   updateFulfillmentStatus: (orderId: string, status: Order['fulfillmentStatus']) => void;
   addProduct: (product: Omit<Product, 'id' | 'createdAt'>) => void;
   updateProduct: (product: Product) => void;
@@ -44,6 +47,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [merchants, setMerchants] = useState<Merchant[]>(INITIAL_MERCHANTS);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodConfig[]>(INITIAL_PAYMENT_METHODS);
+  const [adminCommissionPaymentMethodId, setAdminCommissionPaymentMethodId] = useState<string>('telebirr');
   const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
@@ -64,12 +68,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const savedProducts = localStorage.getItem('ethioparts_products');
       const savedOrders = localStorage.getItem('ethioparts_orders');
       const savedPayments = localStorage.getItem('ethioparts_payments');
+      const savedAdminPm = localStorage.getItem('ethioparts_admin_pm_id');
       const savedMerchants = localStorage.getItem('ethioparts_merchants');
       const savedUser = localStorage.getItem('ethioparts_current_user');
 
       if (savedProducts) setProducts(JSON.parse(savedProducts));
       if (savedOrders) setOrders(JSON.parse(savedOrders));
       if (savedPayments) setPaymentMethods(JSON.parse(savedPayments));
+      if (savedAdminPm) setAdminCommissionPaymentMethodId(JSON.parse(savedAdminPm));
       if (savedMerchants) setMerchants(JSON.parse(savedMerchants));
       if (savedUser) setCurrentUser(JSON.parse(savedUser));
     } catch (e) {
@@ -83,12 +89,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem('ethioparts_products', JSON.stringify(products));
       localStorage.setItem('ethioparts_orders', JSON.stringify(orders));
       localStorage.setItem('ethioparts_payments', JSON.stringify(paymentMethods));
+      localStorage.setItem('ethioparts_admin_pm_id', JSON.stringify(adminCommissionPaymentMethodId));
       localStorage.setItem('ethioparts_merchants', JSON.stringify(merchants));
       localStorage.setItem('ethioparts_current_user', JSON.stringify(currentUser));
     } catch (e) {
       console.error('Failed to save to localStorage', e);
     }
-  }, [products, orders, paymentMethods, merchants, currentUser]);
+  }, [products, orders, paymentMethods, adminCommissionPaymentMethodId, merchants, currentUser]);
 
   const switchUserRole = (role: UserRole, merchantId?: string) => {
     const found = users.find(u => u.role === role && (!merchantId || u.merchantId === merchantId));
@@ -120,6 +127,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       paymentStatus: status,
       fulfillmentStatus: status === 'verified' ? 'processing' : ord.fulfillmentStatus,
       rejectionReason: reason
+    } : ord));
+  };
+
+  const payOrderCommission = (orderId: string, txRef?: string) => {
+    setOrders(prev => prev.map(ord => ord.id === orderId ? {
+      ...ord,
+      commissionStatus: 'paid',
+      commissionPaidAt: new Date().toISOString(),
+      commissionTxRef: txRef || `TX-${Date.now()}`
     } : ord));
   };
 
@@ -257,6 +273,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       users,
       merchants,
       paymentMethods,
+      adminCommissionPaymentMethodId,
+      setAdminCommissionPaymentMethodId,
       categories,
       products,
       orders,
@@ -266,6 +284,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       switchUserRole,
       togglePaymentMethod,
       verifyOrderReceipt,
+      payOrderCommission,
       updateFulfillmentStatus,
       addProduct,
       updateProduct,

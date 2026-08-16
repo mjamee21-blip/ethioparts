@@ -93,4 +93,7 @@ export interface Order {
   fulfillmentStatus: 'processing' | 'shipped' | 'delivered' | 'cancelled';
   createdAt: string;
   rejectionReason?: string;
+  commissionStatus?: 'unpaid' | 'paid';
+  commissionPaidAt?: string;
+  commissionTxRef?: string;
 }

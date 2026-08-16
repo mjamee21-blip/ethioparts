@@ -13,22 +13,21 @@ export const AdminDashboard: React.FC = () => {
     orders, 
     products, 
     categories, 
-    verifyOrderReceipt, 
     updateMerchantStatus, 
     addCategory, 
-    deleteProduct 
+    deleteProduct,
+    adminCommissionPaymentMethodId,
+    setAdminCommissionPaymentMethodId
   } = useApp();
 
-  const [adminSubTab, setAdminSubTab] = useState<'overview' | 'payments' | 'verification' | 'merchants' | 'catalog'>('overview');
+  const [adminSubTab, setAdminSubTab] = useState<'overview' | 'payments' | 'supervision' | 'merchants' | 'catalog'>('overview');
   const [selectedReceipt, setSelectedReceipt] = useState<{ orderId: string; imageUrl: string; buyerName: string; totalAmount: number; paymentMethod: string } | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryDesc, setNewCategoryDesc] = useState('');
 
   // Statistics calculation
   const totalOrdersValue = orders.reduce((sum, o) => sum + o.totalAmount, 0);
   const totalCommission = orders.filter(o => o.paymentStatus === 'verified').reduce((sum, o) => sum + o.commission, 0);
-  const pendingQueue = orders.filter(o => o.paymentStatus === 'pending_verification');
   const activeMerchantsCount = merchants.filter(m => m.status === 'active').length;
 
   const handleAddCategory = (e: React.FormEvent) => {
@@ -45,18 +44,20 @@ export const AdminDashboard: React.FC = () => {
     alert('New category added successfully!');
   };
 
+  const selectedAdminPM = paymentMethods.find(p => p.id === adminCommissionPaymentMethodId);
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 animate-fadeIn">
       {/* Admin Header */}
       <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 text-amber-500 font-mono text-xs uppercase tracking-wider mb-1">
-            <ShieldCheck className="w-4 h-4" /> Admin Control Center
+            <ShieldCheck className="w-4 h-4" /> Admin Control Center (Supervisor Role)
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white">Platform Administration</h1>
-          <p className="text-slate-400 text-sm mt-1">Manage Ethiopian payment gateways, merchants, verification queues, and commissions.</p>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-white">Platform Supervision & Commission Management</h1>
+          <p className="text-slate-400 text-sm mt-1">Supervise all merchant transactions, manage global payment methods, and designate commission payout accounts.</p>
         </div>
-        <div className="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs font-medium">
+        <div className="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs font-medium flex-wrap gap-1">
           <button
             onClick={() => setAdminSubTab('overview')}
             className={`px-3 py-2 rounded-lg transition ${adminSubTab === 'overview' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'}`}
@@ -70,10 +71,10 @@ export const AdminDashboard: React.FC = () => {
             <CreditCard className="w-3.5 h-3.5" /> Payments (10)
           </button>
           <button
-            onClick={() => setAdminSubTab('verification')}
-            className={`px-3 py-2 rounded-lg transition flex items-center gap-1 ${adminSubTab === 'verification' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'}`}
+            onClick={() => setAdminSubTab('supervision')}
+            className={`px-3 py-2 rounded-lg transition flex items-center gap-1 ${adminSubTab === 'supervision' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'}`}
           >
-            <Clock className="w-3.5 h-3.5" /> Receipts ({pendingQueue.length})
+            <Clock className="w-3.5 h-3.5" /> Supervision ({orders.length})
           </button>
           <button
             onClick={() => setAdminSubTab('merchants')}
@@ -112,16 +113,16 @@ export const AdminDashboard: React.FC = () => {
                 <ShieldCheck className="w-5 h-5 text-amber-500" />
               </div>
               <div className="text-2xl font-bold text-amber-400">ETB {totalCommission.toLocaleString()}</div>
-              <p className="text-xs text-slate-400 mt-1">Calculated on verified orders</p>
+              <p className="text-xs text-slate-400 mt-1">Due within 3 days max from merchants</p>
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
               <div className="flex items-center justify-between text-slate-400 mb-2">
-                <span className="text-sm font-medium">Receipt Verification Queue</span>
-                <Clock className="w-5 h-5 text-amber-500" />
+                <span className="text-sm font-medium">Total Platform Orders</span>
+                <Package className="w-5 h-5 text-amber-500" />
               </div>
-              <div className="text-2xl font-bold text-white">{pendingQueue.length} Orders</div>
-              <p className="text-xs text-amber-400 mt-1">Pending manual review</p>
+              <div className="text-2xl font-bold text-white">{orders.length} Orders</div>
+              <p className="text-xs text-amber-400 mt-1">Verified by store merchants</p>
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
@@ -134,89 +135,40 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Recent Orders & Verification Action */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg space-y-4">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Package className="w-5 h-5 text-amber-500" /> Recent Platform Orders & Receipts
-              </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-950 text-slate-400 text-xs uppercase font-mono border-b border-slate-800">
-                    <tr>
-                      <th className="p-3">Order ID</th>
-                      <th className="p-3">Buyer</th>
-                      <th className="p-3">Amount (ETB)</th>
-                      <th className="p-3">Payment Method</th>
-                      <th className="p-3">Status</th>
-                      <th className="p-3">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {orders.map(order => (
-                      <tr key={order.id} className="hover:bg-slate-850/50">
-                        <td className="p-3 font-mono font-medium text-amber-400">{order.id}</td>
-                        <td className="p-3">{order.buyerName}</td>
-                        <td className="p-3 font-semibold">ETB {order.totalAmount.toLocaleString()}</td>
-                        <td className="p-3 text-xs text-slate-300">{order.selectedPaymentMethodName}</td>
-                        <td className="p-3">
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                            order.paymentStatus === 'verified' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                            order.paymentStatus === 'rejected' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                            'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                          }`}>
-                            {order.paymentStatus.replace('_', ' ')}
-                          </span>
-                        </td>
-                        <td className="p-3">
-                          <button
-                            onClick={() => setSelectedReceipt({
-                              orderId: order.id,
-                              imageUrl: order.receiptImage || '',
-                              buyerName: order.buyerName,
-                              totalAmount: order.totalAmount,
-                              paymentMethod: order.selectedPaymentMethodName
-                            })}
-                            className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs font-medium border border-slate-700 transition"
-                          >
-                            View Receipt
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+          {/* Admin Commission Payment Account Settings */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-amber-500" /> Admin Commission Payout Account (Designated for Merchants)
+            </h3>
+            <p className="text-xs text-slate-400">
+              Select which payment gateway merchants must use to remit the 10% platform commission within 3 days of receiving customer funds.
+            </p>
 
-            {/* Quick Payment Toggles Summary */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg space-y-4">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-amber-500" /> Top 10 Payment Gateways
-              </h3>
-              <p className="text-xs text-slate-400">Global toggle switches control availability across all merchants and buyer checkouts.</p>
-              
-              <div className="space-y-2.5 max-h-[340px] overflow-y-auto pr-1">
-                {paymentMethods.map(pm => (
-                  <div key={pm.id} className="flex items-center justify-between p-2.5 bg-slate-950 rounded-lg border border-slate-800">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-3 h-3 rounded-full ${pm.enabled ? 'bg-emerald-500 shadow-sm shadow-emerald-500' : 'bg-slate-600'}`}></div>
-                      <div>
-                        <div className="text-xs font-bold text-white">{pm.name}</div>
-                        <div className="text-[10px] text-slate-400 font-mono">{pm.code}</div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => togglePaymentMethod(pm.id)}
-                      className={`px-3 py-1 rounded text-xs font-bold transition ${
-                        pm.enabled ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-400'
-                      }`}
-                    >
-                      {pm.enabled ? 'Enabled' : 'Disabled'}
-                    </button>
-                  </div>
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-slate-950 p-4 rounded-xl border border-slate-800">
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Commission Payment Gateway</label>
+                <select
+                  value={adminCommissionPaymentMethodId}
+                  onChange={e => setAdminCommissionPaymentMethodId(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500"
+                >
+                  {paymentMethods.filter(p => p.enabled).map(pm => (
+                    <option key={pm.id} value={pm.id}>{pm.name}</option>
+                  ))}
+                </select>
               </div>
+
+              <div className="text-xs text-slate-300 space-y-1 bg-slate-900 p-3 rounded-xl border border-slate-800">
+                <div><span className="text-slate-400">Designated Account Name:</span> {selectedAdminPM?.accountName}</div>
+                <div><span className="text-slate-400">Designated Number:</span> <strong className="text-amber-400 font-mono">{selectedAdminPM?.accountNumber}</strong></div>
+              </div>
+
+              <button
+                onClick={() => alert(`Admin commission payout account updated to ${selectedAdminPM?.name}. All merchants have been notified to remit their 10% commission here within 3 days.`)}
+                className="py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition shadow-lg shadow-amber-500/20"
+              >
+                Save Commission Account
+              </button>
             </div>
           </div>
         </div>
@@ -228,7 +180,7 @@ export const AdminDashboard: React.FC = () => {
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg">
             <h2 className="text-xl font-bold text-white mb-2">Global Offline & Mobile Payment Gateway Configuration</h2>
             <p className="text-slate-400 text-sm mb-6">
-              Ethiopia features distinct financial channels. Enable or disable each of the top 10 payment methods globally. Merchants can select a subset of these for their specific product ads.
+              Enable or disable each of the top 10 payment methods globally. Merchants can select a subset of these for their specific product ads.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -268,73 +220,81 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* RECEIPT VERIFICATION QUEUE TAB */}
-      {adminSubTab === 'verification' && (
+      {/* SUPERVISION & TRANSACTIONS LEDGER (Read-only for Admin) */}
+      {adminSubTab === 'supervision' && (
         <div className="space-y-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg">
-            <h2 className="text-xl font-bold text-white mb-2">Receipt Verification Queue</h2>
-            <p className="text-slate-400 text-sm mb-6">Review uploaded bank deposit slips and Telebirr/CBE-Birr SMS screenshots submitted by buyers.</p>
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg space-y-4">
+            <h2 className="text-xl font-bold text-white">Platform Transactions & Supervision Ledger</h2>
+            <p className="text-slate-400 text-sm">
+              As Admin, you supervise all marketplace transactions. Payment verification is handled directly by each store merchant.
+            </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {orders.map(order => (
-                <div key={order.id} className="bg-slate-950 border border-slate-800 rounded-xl p-5 flex flex-col justify-between space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-xs font-mono text-amber-400 font-bold">{order.id}</span>
-                      <h3 className="font-bold text-white">{order.buyerName}</h3>
-                      <p className="text-xs text-slate-400">{order.buyerPhone}</p>
-                    </div>
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                      order.paymentStatus === 'verified' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                      order.paymentStatus === 'rejected' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                      'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                    }`}>
-                      {order.paymentStatus.replace('_', ' ')}
-                    </span>
-                  </div>
-
-                  <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 text-xs space-y-1">
-                    <div className="text-slate-400"><span className="text-slate-300 font-medium">Payment Method:</span> {order.selectedPaymentMethodName}</div>
-                    <div className="text-slate-400"><span className="text-slate-300 font-medium">Total Amount:</span> <strong className="text-white">ETB {order.totalAmount.toLocaleString()}</strong></div>
-                    <div className="text-slate-400"><span className="text-slate-300 font-medium">10% Commission:</span> <strong className="text-amber-400">ETB {order.commission.toLocaleString()}</strong></div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => setSelectedReceipt({
-                        orderId: order.id,
-                        imageUrl: order.receiptImage || '',
-                        buyerName: order.buyerName,
-                        totalAmount: order.totalAmount,
-                        paymentMethod: order.selectedPaymentMethodName
-                      })}
-                      className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-bold rounded-lg border border-slate-700 transition flex items-center justify-center gap-1.5"
-                    >
-                      <Search className="w-3.5 h-3.5" /> View Receipt Screenshot
-                    </button>
-
-                    {order.paymentStatus === 'pending_verification' && (
-                      <div className="grid grid-cols-2 gap-2">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-950 text-slate-400 text-xs uppercase font-mono border-b border-slate-800">
+                  <tr>
+                    <th className="p-3">Order ID</th>
+                    <th className="p-3">Buyer</th>
+                    <th className="p-3">Total (ETB)</th>
+                    <th className="p-3">10% Commission</th>
+                    <th className="p-3">Commission Status</th>
+                    <th className="p-3">Payment Gateway</th>
+                    <th className="p-3">Merchant Payment Status</th>
+                    <th className="p-3">Receipt</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                  {orders.map(order => (
+                    <tr key={order.id} className="hover:bg-slate-850/50">
+                      <td className="p-3 font-mono font-medium text-amber-400">{order.id}</td>
+                      <td className="p-3">{order.buyerName}</td>
+                      <td className="p-3 font-semibold">ETB {order.totalAmount.toLocaleString()}</td>
+                      <td className="p-3 text-amber-400 font-bold">
+                        ETB {order.commission.toLocaleString()}
+                      </td>
+                      <td className="p-3 text-xs">
+                        {order.paymentStatus !== 'verified' ? (
+                          <span className="text-slate-500 italic">Owed after verification</span>
+                        ) : order.commissionStatus === 'paid' ? (
+                          <span className="text-emerald-400 font-bold flex flex-col">
+                            <span>Paid (remitted)</span>
+                            <span className="text-[10px] font-mono text-slate-400">Ref: {order.commissionTxRef}</span>
+                          </span>
+                        ) : (
+                          <span className="text-amber-500 font-bold flex flex-col">
+                            <span>Pending (3 days max)</span>
+                            <span className="text-[10px] text-slate-400">Due soon</span>
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3 text-xs text-slate-300">{order.selectedPaymentMethodName}</td>
+                      <td className="p-3">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                          order.paymentStatus === 'verified' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                          order.paymentStatus === 'rejected' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                          'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        }`}>
+                          {order.paymentStatus.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td className="p-3">
                         <button
-                          onClick={() => verifyOrderReceipt(order.id, 'verified')}
-                          className="py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition flex items-center justify-center gap-1 shadow-md shadow-emerald-600/20"
+                          onClick={() => setSelectedReceipt({
+                            orderId: order.id,
+                            imageUrl: order.receiptImage || '',
+                            buyerName: order.buyerName,
+                            totalAmount: order.totalAmount,
+                            paymentMethod: order.selectedPaymentMethodName
+                          })}
+                          className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs font-medium border border-slate-700 transition"
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Verify
+                          Inspect Receipt
                         </button>
-                        <button
-                          onClick={() => {
-                            const reason = prompt('Enter rejection reason for buyer:', 'Receipt image unclear or reference number mismatch.');
-                            if (reason !== null) verifyOrderReceipt(order.id, 'rejected', reason);
-                          }}
-                          className="py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition flex items-center justify-center gap-1 shadow-md shadow-red-600/20"
-                        >
-                          <XCircle className="w-3.5 h-3.5" /> Reject
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -482,14 +442,14 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* RECEIPT MODAL VIEWER */}
+      {/* RECEIPT MODAL VIEWER (Supervision Only) */}
       {selectedReceipt && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
             <div className="flex justify-between items-center">
               <div>
                 <span className="text-xs font-mono text-amber-400">{selectedReceipt.orderId}</span>
-                <h3 className="text-lg font-bold text-white">Receipt Verification Screenshot</h3>
+                <h3 className="text-lg font-bold text-white">Supervision Receipt Inspector</h3>
               </div>
               <button 
                 onClick={() => setSelectedReceipt(null)}
@@ -509,27 +469,12 @@ export const AdminDashboard: React.FC = () => {
               <img src={selectedReceipt.imageUrl} alt="Receipt Screenshot" className="max-h-full max-w-full object-contain" />
             </div>
 
-            <div className="grid grid-cols-2 gap-3 pt-2">
+            <div className="text-center pt-2">
               <button
-                onClick={() => {
-                  verifyOrderReceipt(selectedReceipt.orderId, 'verified');
-                  setSelectedReceipt(null);
-                }}
-                className="py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
+                onClick={() => setSelectedReceipt(null)}
+                className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition"
               >
-                <Check className="w-4 h-4" /> Verify Payment
-              </button>
-              <button
-                onClick={() => {
-                  const reason = prompt('Enter rejection reason:', 'Invalid transaction reference code.');
-                  if (reason !== null) {
-                    verifyOrderReceipt(selectedReceipt.orderId, 'rejected', reason);
-                    setSelectedReceipt(null);
-                  }
-                }}
-                className="py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-red-600/20"
-              >
-                <X className="w-4 h-4" /> Reject Receipt
+                Close Inspector
               </button>
             </div>
           </div>

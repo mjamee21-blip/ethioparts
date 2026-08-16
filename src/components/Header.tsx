@@ -10,7 +10,11 @@ export const Header: React.FC<{ onOpenCart: () => void }> = ({ onOpenCart }) => 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
-  const pendingVerificationCount = orders.filter(o => o.paymentStatus === 'pending_verification').length;
+  const merchantPendingCount = orders.filter(o => 
+    currentUser.merchantId && 
+    o.items.some(item => item.merchantId === currentUser.merchantId) && 
+    o.paymentStatus === 'pending_verification'
+  ).length;
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const isGuest = currentUser.role === 'guest';
@@ -82,12 +86,7 @@ export const Header: React.FC<{ onOpenCart: () => void }> = ({ onOpenCart }) => 
                 }`}
               >
                 <LayoutDashboard className="w-4 h-4" />
-                Admin Dashboard
-                {pendingVerificationCount > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 text-xs bg-red-600 text-white rounded-full font-bold animate-bounce">
-                    {pendingVerificationCount}
-                  </span>
-                )}
+                Admin Dashboard (Supervisor)
               </button>
             ) : currentUser.role === 'merchant' ? (
               <button
@@ -98,6 +97,11 @@ export const Header: React.FC<{ onOpenCart: () => void }> = ({ onOpenCart }) => 
               >
                 <LayoutDashboard className="w-4 h-4" />
                 Merchant Dashboard
+                {merchantPendingCount > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 text-xs bg-red-600 text-white rounded-full font-bold animate-bounce">
+                    {merchantPendingCount}
+                  </span>
+                )}
               </button>
             ) : (
               <>
@@ -179,22 +183,21 @@ export const Header: React.FC<{ onOpenCart: () => void }> = ({ onOpenCart }) => 
                   activeTab === 'admin' ? 'bg-amber-500 text-slate-950 font-bold shadow' : 'text-slate-300 bg-slate-900 hover:bg-slate-800'
                 }`}
               >
-                <span className="flex items-center gap-2.5"><LayoutDashboard className="w-4 h-4" /> Admin Dashboard</span>
-                {pendingVerificationCount > 0 && (
-                  <span className="px-2 py-0.5 text-xs bg-red-600 text-white rounded-full font-bold">
-                    {pendingVerificationCount} pending
-                  </span>
-                )}
+                <span className="flex items-center gap-2.5"><LayoutDashboard className="w-4 h-4" /> Admin Dashboard (Supervisor)</span>
               </button>
             ) : currentUser.role === 'merchant' ? (
               <button
                 onClick={() => { setActiveTab('merchant'); setMobileMenuOpen(false); }}
-                className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition flex items-center gap-2.5 ${
+                className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition flex items-center justify-between ${
                   activeTab === 'merchant' ? 'bg-amber-500 text-slate-950 font-bold shadow' : 'text-slate-300 bg-slate-900 hover:bg-slate-800'
                 }`}
               >
-                <LayoutDashboard className="w-4 h-4" />
-                Merchant Dashboard
+                <span className="flex items-center gap-2.5"><LayoutDashboard className="w-4 h-4" /> Merchant Dashboard</span>
+                {merchantPendingCount > 0 && (
+                  <span className="px-2 py-0.5 text-xs bg-red-600 text-white rounded-full font-bold">
+                    {merchantPendingCount} pending
+                  </span>
+                )}
               </button>
             ) : (
               <>
