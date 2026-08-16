@@ -28,10 +28,6 @@ export const BuyerHome: React.FC<{ onSelectProduct: (p: Product) => void; onView
         
         <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">
-              <ShieldCheck className="w-4 h-4" /> Ethiopia's #1 Certified Auto Parts Platform
-            </div>
-
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
               Genuine Auto Parts for <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">Ethiopian Roads</span>
             </h1>
@@ -78,17 +74,17 @@ export const BuyerHome: React.FC<{ onSelectProduct: (p: Product) => void; onView
             </div>
           </div>
 
-          <div className="relative">
-            <div className="relative rounded-2xl overflow-hidden border-2 border-slate-800 shadow-2xl group">
+          <div className="relative p-2 bg-slate-900/50 rounded-3xl border border-slate-800 backdrop-blur-sm shadow-2xl">
+            <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-2xl group aspect-[4/3] md:aspect-[16/11]">
               <img
-                src="https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=800&q=80"
+                src="https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1000&q=85"
                 alt="Ethiopian Auto Parts Marketplace"
-                className="w-full h-80 md:h-96 object-cover group-hover:scale-105 transition duration-500"
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-700"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent flex flex-col justify-end p-6">
-                <span className="text-amber-400 font-mono text-xs uppercase font-bold tracking-wider">Verified Merkato Hub</span>
-                <h3 className="text-white font-extrabold text-xl">Toyota Hilux Revo Suspension Kit</h3>
-                <p className="text-slate-300 text-xs mt-1">Directly imported from certified manufacturers with 10% buyer protection guarantee.</p>
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-6 md:p-8">
+                <span className="text-amber-400 font-mono text-xs uppercase font-bold tracking-wider mb-1">Verified Merkato Hub</span>
+                <h3 className="text-white font-extrabold text-xl md:text-2xl">Toyota Hilux Revo Suspension Kit</h3>
+                <p className="text-slate-300 text-xs md:text-sm mt-1">Directly imported from certified manufacturers with 10% buyer protection guarantee.</p>
               </div>
             </div>
           </div>
