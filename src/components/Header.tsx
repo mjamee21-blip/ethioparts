@@ -26,7 +26,7 @@ export const Header: React.FC<{ onOpenCart: () => void }> = ({ onOpenCart }) => 
         <div className="bg-slate-950 px-3 sm:px-4 py-2 border-b border-slate-800 text-xs flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-slate-400">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>EthioParts Ethiopia's #1 Certified Auto Parts Marketplace</span>
+            <span>EthioParts - Certified Auto Parts Marketplace</span>
           </div>
 
           <div className="flex items-center gap-3">
