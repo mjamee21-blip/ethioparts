@@ -3,12 +3,10 @@
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Wrench, ShieldCheck, Store, ShoppingCart, UserCheck, Package, LayoutDashboard, Search, Home, Menu, X, LogIn, LogOut } from 'lucide-react';
-import { AuthModal } from '@/components/AuthModal';
 
 export const Header: React.FC<{ onOpenCart: () => void }> = ({ onOpenCart }) => {
   const { currentUser, switchUserRole, cart, activeTab, setActiveTab, orders } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const merchantPendingCount = orders.filter(o => 
     currentUser.merchantId && 
@@ -32,7 +30,7 @@ export const Header: React.FC<{ onOpenCart: () => void }> = ({ onOpenCart }) => 
           <div className="flex items-center gap-3">
             {isGuest ? (
               <button
-                onClick={() => setAuthModalOpen(true)}
+                onClick={() => setActiveTab('auth')}
                 className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-lg transition flex items-center gap-1.5 shadow"
               >
                 <LogIn className="w-3.5 h-3.5" />
@@ -169,7 +167,7 @@ export const Header: React.FC<{ onOpenCart: () => void }> = ({ onOpenCart }) => 
           <div className="md:hidden bg-slate-950 border-t border-slate-800 px-4 py-4 space-y-2 animate-fadeIn">
             {isGuest && (
               <button
-                onClick={() => { setAuthModalOpen(true); setMobileMenuOpen(false); }}
+                onClick={() => { setActiveTab('auth'); setMobileMenuOpen(false); }}
                 className="w-full px-4 py-3 rounded-xl text-sm font-bold bg-amber-500 text-slate-950 transition flex items-center gap-2.5"
               >
                 <LogIn className="w-4 h-4" /> Sign In / Register
@@ -233,9 +231,6 @@ export const Header: React.FC<{ onOpenCart: () => void }> = ({ onOpenCart }) => 
           </div>
         )}
       </header>
-
-      {/* Auth Modal */}
-      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </>
   );
 };

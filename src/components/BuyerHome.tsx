@@ -74,10 +74,10 @@ export const BuyerHome: React.FC<{ onSelectProduct: (p: Product) => void; onView
             </div>
           </div>
 
-          <div className="relative p-2 bg-slate-900/50 rounded-3xl border border-slate-800 backdrop-blur-sm shadow-2xl">
-            <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-2xl group aspect-[4/3] md:aspect-[16/11]">
+          <div className="relative p-3 bg-gradient-to-br from-slate-900 to-slate-950 rounded-3xl border border-slate-800/80 shadow-2xl">
+            <div className="relative rounded-2xl overflow-hidden border border-slate-700/40 shadow-inner group w-full h-72 sm:h-80 md:h-[420px]">
               <img
-                src="https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1000&q=85"
+                src="https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1200&q=90"
                 alt="Ethiopian Auto Parts Marketplace"
                 className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-700"
               />

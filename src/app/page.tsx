@@ -395,6 +395,157 @@ function CartCheckoutPage({ onBack, onOrderPlaced }: { onBack: () => void; onOrd
   );
 }
 
+// Dedicated Inline Auth Page (No popup)
+function AuthPage({ onBack }: { onBack: () => void }) {
+  const { users, switchUserRole, setActiveTab } = useApp();
+  const [mode, setMode] = useState<'login' | 'register' | 'verify'>('login');
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const [regName, setRegName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regRole, setRegRole] = useState<'merchant' | 'buyer'>('buyer');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (usernameOrEmail === 'siris888' && password === 'Passw0rd') {
+      switchUserRole('admin');
+      setActiveTab('admin');
+      return;
+    }
+    if (usernameOrEmail === 'marchant' && password === 'password123') {
+      switchUserRole('merchant', 'mch-1');
+      setActiveTab('merchant');
+      return;
+    }
+    if (usernameOrEmail === 'buyer' && password === 'password123') {
+      switchUserRole('buyer');
+      setActiveTab('home');
+      return;
+    }
+    const found = users.find(u => (u.username === usernameOrEmail || u.email === usernameOrEmail) && u.password === password);
+    if (found) {
+      switchUserRole(found.role, found.merchantId);
+      setActiveTab(found.role === 'admin' ? 'admin' : found.role === 'merchant' ? 'merchant' : 'home');
+    } else {
+      setError('Invalid username/email or password.');
+    }
+  };
+
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!regName || !regEmail || !regPassword) {
+      setError('Please fill in all fields.');
+      return;
+    }
+    setMode('verify');
+    setSuccessMsg(`Verification code dispatched to ${regEmail}. Enter '123456'.`);
+  };
+
+  const handleVerify = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (verificationCode === '123456') {
+      const newUser = {
+        id: `usr-${Date.now()}`,
+        name: regName,
+        email: regEmail,
+        username: regEmail.split('@')[0],
+        password: regPassword,
+        role: regRole,
+        merchantId: regRole === 'merchant' ? `mch-${Date.now()}` : undefined,
+        verified: true,
+        joinedDate: new Date().toISOString().split('T')[0]
+      };
+      users.push(newUser);
+      switchUserRole(regRole, newUser.merchantId);
+      setActiveTab(regRole === 'merchant' ? 'merchant' : 'home');
+    } else {
+      setError('Invalid code. Enter 123456.');
+    }
+  };
+
+  return (
+    <div className="max-w-md mx-auto px-4 py-12 space-y-8 animate-fadeIn">
+      <button onClick={onBack} className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-slate-800">
+        <ArrowLeft className="w-4 h-4" /> Back to Home
+      </button>
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl space-y-6">
+        <h1 className="text-2xl font-extrabold text-white flex items-center gap-3">
+          <Wrench className="w-6 h-6 text-amber-500" />
+          {mode === 'login' ? 'Secure Account Sign In' : mode === 'register' ? 'Create New Account' : 'Email Verification'}
+        </h1>
+        {error && <div className="p-3 bg-red-500/20 border border-red-500/40 text-red-300 text-xs rounded-xl">{error}</div>}
+        {mode === 'login' && (
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Username or Email</label>
+              <input type="text" value={usernameOrEmail} onChange={e => setUsernameOrEmail(e.target.value)} placeholder="siris888, marchant, buyer" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs font-mono" required />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Password</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs" required />
+            </div>
+            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+              <span className="text-[11px] font-bold text-amber-400 uppercase font-mono">Quick Demo Logins:</span>
+              <div className="grid grid-cols-3 gap-2">
+                <button type="button" onClick={() => { setUsernameOrEmail('siris888'); setPassword('Passw0rd'); }} className="p-2 bg-slate-900 text-slate-300 rounded-lg text-[10px] border border-slate-800 text-center">Admin<br/><strong className="text-amber-400">siris888</strong></button>
+                <button type="button" onClick={() => { setUsernameOrEmail('marchant'); setPassword('password123'); }} className="p-2 bg-slate-900 text-slate-300 rounded-lg text-[10px] border border-slate-800 text-center">Merchant<br/><strong className="text-amber-400">marchant</strong></button>
+                <button type="button" onClick={() => { setUsernameOrEmail('buyer'); setPassword('password123'); }} className="p-2 bg-slate-900 text-slate-300 rounded-lg text-[10px] border border-slate-800 text-center">Buyer<br/><strong className="text-amber-400">buyer</strong></button>
+              </div>
+            </div>
+            <button type="submit" className="w-full py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition shadow-lg">Sign In</button>
+            <div className="text-center pt-2">
+              <button type="button" onClick={() => setMode('register')} className="text-xs text-amber-400 hover:underline">Don't have an account? Register</button>
+            </div>
+          </form>
+        )}
+        {mode === 'register' && (
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
+              <input type="text" value={regName} onChange={e => setRegName(e.target.value)} placeholder="Abebe Kebede" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs" required />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Email</label>
+              <input type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)} placeholder="abebe@gmail.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs" required />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Password</label>
+              <input type="password" value={regPassword} onChange={e => setRegPassword(e.target.value)} placeholder="Password" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs" required />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Role</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button type="button" onClick={() => setRegRole('buyer')} className={`p-3 rounded-xl border text-xs font-bold ${regRole === 'buyer' ? 'bg-amber-500/10 border-amber-500 text-amber-300' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>Buyer</button>
+                <button type="button" onClick={() => setRegRole('merchant')} className={`p-3 rounded-xl border text-xs font-bold ${regRole === 'merchant' ? 'bg-amber-500/10 border-amber-500 text-amber-300' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>Merchant</button>
+              </div>
+            </div>
+            <button type="submit" className="w-full py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition shadow-lg">Continue & Verify</button>
+            <div className="text-center pt-2">
+              <button type="button" onClick={() => setMode('login')} className="text-xs text-slate-400 hover:text-white">Already have an account? Sign In</button>
+            </div>
+          </form>
+        )}
+        {mode === 'verify' && (
+          <form onSubmit={handleVerify} className="space-y-4">
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs rounded-xl text-center">{successMsg}</div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Enter 6-digit Code (123456)</label>
+              <input type="text" value={verificationCode} onChange={e => setVerificationCode(e.target.value)} placeholder="123456" maxLength={6} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-white font-mono text-lg tracking-widest" required />
+            </div>
+            <button type="submit" className="w-full py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition shadow-lg">Verify & Complete</button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const { currentUser, activeTab, setActiveTab } = useApp();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -404,7 +555,9 @@ export default function Home() {
       <Header onOpenCart={() => setActiveTab('cart-checkout')} />
 
       <main className="flex-grow">
-        {currentUser.role === 'admin' && activeTab === 'admin' ? (
+        {activeTab === 'auth' ? (
+          <AuthPage onBack={() => setActiveTab('home')} />
+        ) : currentUser.role === 'admin' && activeTab === 'admin' ? (
           <AdminDashboard />
         ) : currentUser.role === 'merchant' && activeTab === 'merchant' ? (
           <MerchantDashboard />

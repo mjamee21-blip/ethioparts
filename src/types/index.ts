@@ -76,6 +76,12 @@ export interface OrderItem {
   imageUrl: string;
 }
 
+export interface AdminCommissionAccount {
+  paymentMethodId: string;
+  accountName: string;
+  accountNumber: string; // phone number or bank account number
+}
+
 export interface Order {
   id: string;
   buyerId: string;
@@ -93,7 +99,8 @@ export interface Order {
   fulfillmentStatus: 'processing' | 'shipped' | 'delivered' | 'cancelled';
   createdAt: string;
   rejectionReason?: string;
-  commissionStatus?: 'unpaid' | 'paid';
+  commissionStatus?: 'unpaid' | 'pending_verification' | 'paid' | 'rejected';
   commissionPaidAt?: string;
   commissionTxRef?: string;
+  commissionReceiptImage?: string;
 }

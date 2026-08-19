@@ -17,13 +17,15 @@ export const AdminDashboard: React.FC = () => {
     addCategory, 
     deleteProduct,
     adminCommissionPaymentMethodId,
-    setAdminCommissionPaymentMethodId
+    setAdminCommissionPaymentMethodId,
+    updatePaymentMethodConfig
   } = useApp();
 
   const [adminSubTab, setAdminSubTab] = useState<'overview' | 'payments' | 'supervision' | 'merchants' | 'catalog'>('overview');
   const [selectedReceipt, setSelectedReceipt] = useState<{ orderId: string; imageUrl: string; buyerName: string; totalAmount: number; paymentMethod: string } | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryDesc, setNewCategoryDesc] = useState('');
+  const [pmEdits, setPmEdits] = useState<Record<string, { name: string; accountNumber: string; accountName: string }>>({});
 
   // Statistics calculation
   const totalOrdersValue = orders.reduce((sum, o) => sum + o.totalAmount, 0);
@@ -207,9 +209,53 @@ export const AdminDashboard: React.FC = () => {
                     </label>
                   </div>
 
-                  <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 text-xs space-y-1">
-                    <div className="text-slate-400"><span className="text-slate-300 font-medium">Account Name:</span> {pm.accountName}</div>
-                    <div className="text-slate-400"><span className="text-slate-300 font-medium">Number / ID:</span> {pm.accountNumber}</div>
+                  <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-xs space-y-3">
+                    <div className="font-bold text-amber-400 uppercase font-mono text-[11px]">Gateway Configuration</div>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-[10px] text-slate-400 mb-1">Method Name</label>
+                        <input
+                          type="text"
+                          value={pmEdits[pm.id]?.name !== undefined ? pmEdits[pm.id].name : pm.name}
+                          onChange={e => setPmEdits(prev => ({ ...prev, [pm.id]: { name: e.target.value, accountNumber: pmEdits[pm.id]?.accountNumber !== undefined ? pmEdits[pm.id].accountNumber : pm.accountNumber, accountName: pmEdits[pm.id]?.accountName !== undefined ? pmEdits[pm.id].accountName : pm.accountName } }))}
+                          className="w-full bg-slate-950 border border-slate-700 text-white rounded-lg px-3 py-2 text-xs"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] text-slate-400 mb-1">Account Name</label>
+                          <input
+                            type="text"
+                            value={pmEdits[pm.id]?.accountName !== undefined ? pmEdits[pm.id].accountName : pm.accountName}
+                            onChange={e => setPmEdits(prev => ({ ...prev, [pm.id]: { name: pmEdits[pm.id]?.name !== undefined ? pmEdits[pm.id].name : pm.name, accountNumber: pmEdits[pm.id]?.accountNumber !== undefined ? pmEdits[pm.id].accountNumber : pm.accountNumber, accountName: e.target.value } }))}
+                            className="w-full bg-slate-950 border border-slate-700 text-white rounded-lg px-3 py-2 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 mb-1">{pm.type === 'mobile_money' ? 'Mobile Phone #' : 'Bank Account #'}</label>
+                          <input
+                            type="text"
+                            value={pmEdits[pm.id]?.accountNumber !== undefined ? pmEdits[pm.id].accountNumber : pm.accountNumber}
+                            onChange={e => setPmEdits(prev => ({ ...prev, [pm.id]: { name: pmEdits[pm.id]?.name !== undefined ? pmEdits[pm.id].name : pm.name, accountNumber: e.target.value, accountName: pmEdits[pm.id]?.accountName !== undefined ? pmEdits[pm.id].accountName : pm.accountName } }))}
+                            className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-mono rounded-lg px-3 py-2 text-xs font-bold"
+                          />
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const ed = pmEdits[pm.id];
+                          const name = ed?.name !== undefined ? ed.name : pm.name;
+                          const num = ed?.accountNumber !== undefined ? ed.accountNumber : pm.accountNumber;
+                          const accName = ed?.accountName !== undefined ? ed.accountName : pm.accountName;
+                          updatePaymentMethodConfig(pm.id, name, num, accName);
+                          alert(`Updated ${name} gateway successfully!`);
+                        }}
+                        className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-lg text-xs transition"
+                      >
+                        Save Gateway Settings
+                      </button>
+                    </div>
                   </div>
 
                   <p className="text-xs text-slate-400 leading-relaxed">{pm.instructions}</p>
@@ -223,6 +269,35 @@ export const AdminDashboard: React.FC = () => {
       {/* SUPERVISION & TRANSACTIONS LEDGER (Read-only for Admin) */}
       {adminSubTab === 'supervision' && (
         <div className="space-y-6">
+          {selectedReceipt && (
+            <div className="bg-slate-900 border-2 border-amber-500/40 rounded-2xl p-6 shadow-xl space-y-4 animate-fadeIn">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div>
+                  <span className="text-xs font-mono text-amber-400 font-bold">{selectedReceipt.orderId}</span>
+                  <h3 className="text-lg font-extrabold text-white">Supervision Receipt Inspector (Inline View)</h3>
+                </div>
+                <button
+                  onClick={() => setSelectedReceipt(null)}
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition"
+                >
+                  Close Inspector
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs space-y-2">
+                  <div><span className="text-slate-400">Buyer:</span> <strong className="text-white text-sm">{selectedReceipt.buyerName}</strong></div>
+                  <div><span className="text-slate-400">Payment Gateway:</span> <strong className="text-amber-400">{selectedReceipt.paymentMethod}</strong></div>
+                  <div><span className="text-slate-400">Total Amount:</span> <strong className="text-emerald-400 text-sm">ETB {selectedReceipt.totalAmount.toLocaleString()}</strong></div>
+                  <p className="text-slate-400 pt-2 leading-relaxed">Admin oversight mode: Showing verified transaction slip uploaded by customer.</p>
+                </div>
+                <div className="border border-slate-800 rounded-xl overflow-hidden bg-black flex items-center justify-center h-64">
+                  <img src={selectedReceipt.imageUrl} alt="Receipt Screenshot" className="max-h-full max-w-full object-contain" />
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg space-y-4">
             <h2 className="text-xl font-bold text-white">Platform Transactions & Supervision Ledger</h2>
             <p className="text-slate-400 text-sm">
@@ -442,44 +517,6 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* RECEIPT MODAL VIEWER (Supervision Only) */}
-      {selectedReceipt && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <span className="text-xs font-mono text-amber-400">{selectedReceipt.orderId}</span>
-                <h3 className="text-lg font-bold text-white">Supervision Receipt Inspector</h3>
-              </div>
-              <button 
-                onClick={() => setSelectedReceipt(null)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-1">
-              <div><span className="text-slate-400">Buyer:</span> <strong className="text-white">{selectedReceipt.buyerName}</strong></div>
-              <div><span className="text-slate-400">Payment Gateway:</span> <strong className="text-amber-400">{selectedReceipt.paymentMethod}</strong></div>
-              <div><span className="text-slate-400">Total Amount:</span> <strong className="text-emerald-400">ETB {selectedReceipt.totalAmount.toLocaleString()}</strong></div>
-            </div>
-
-            <div className="border border-slate-800 rounded-xl overflow-hidden bg-black flex items-center justify-center h-72">
-              <img src={selectedReceipt.imageUrl} alt="Receipt Screenshot" className="max-h-full max-w-full object-contain" />
-            </div>
-
-            <div className="text-center pt-2">
-              <button
-                onClick={() => setSelectedReceipt(null)}
-                className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition"
-              >
-                Close Inspector
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

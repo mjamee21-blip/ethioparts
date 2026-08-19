@@ -488,222 +488,223 @@ export const MerchantDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* ADD / EDIT PRODUCT MODAL */}
+      {/* ADD / EDIT PRODUCT INLINE SECTION */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Package className="w-5 h-5 text-amber-500" />
-                {editingProduct ? 'Edit Auto Part & Payment Settings' : 'List New Auto Part'}
-              </h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800">
-                <X className="w-5 h-5" />
-              </button>
+        <div className="bg-slate-900 border-2 border-amber-500/40 rounded-2xl p-6 md:p-8 shadow-2xl space-y-6 animate-fadeIn">
+          <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Package className="w-5 h-5 text-amber-500" />
+              {editingProduct ? 'Edit Auto Part & Payment Settings (Inline Form)' : 'List New Auto Part (Inline Form)'}
+            </h2>
+            <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white px-3 py-1 bg-slate-800 rounded-lg text-xs font-bold transition">
+              Cancel
+            </button>
+          </div>
+
+          <form onSubmit={handleSaveProduct} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Part Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="e.g. Toyota Hilux Shock Absorber"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Part Number / OEM Code</label>
+                <input
+                  type="text"
+                  value={partNumber}
+                  onChange={e => setPartNumber(e.target.value)}
+                  placeholder="e.g. TOY-48510-0K430"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500 font-mono"
+                  required
+                />
+              </div>
             </div>
 
-            <form onSubmit={handleSaveProduct} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Part Name</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    placeholder="e.g. Toyota Hilux Shock Absorber"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Part Number / OEM Code</label>
-                  <input
-                    type="text"
-                    value={partNumber}
-                    onChange={e => setPartNumber(e.target.value)}
-                    placeholder="e.g. TOY-48510-0K430"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500 font-mono"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Price (ETB)</label>
-                  <input
-                    type="number"
-                    value={price}
-                    onChange={e => setPrice(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500 font-bold"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Stock Quantity</label>
-                  <input
-                    type="number"
-                    value={stock}
-                    onChange={e => setStock(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500 font-bold"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Condition</label>
-                  <select
-                    value={condition}
-                    onChange={e => setCondition(e.target.value as any)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500"
-                  >
-                    <option value="Brand New">Brand New</option>
-                    <option value="Original Used">Original Used (Jap)</option>
-                    <option value="OEM Replacement">OEM Replacement</option>
-                  </select>
-                </div>
-              </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Vehicle Compatibility (comma separated)</label>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Price (ETB)</label>
                 <input
-                  type="text"
-                  value={compatibility}
-                  onChange={e => setCompatibility(e.target.value)}
-                  placeholder="e.g. Toyota Vitz 2012-2018, Toyota Yaris"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500"
+                  type="number"
+                  value={price}
+                  onChange={e => setPrice(Number(e.target.value))}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500 font-bold"
                   required
                 />
               </div>
-
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Image URL</label>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Stock Quantity</label>
                 <input
-                  type="text"
-                  value={imageUrl}
-                  onChange={e => setImageUrl(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500"
+                  type="number"
+                  value={stock}
+                  onChange={e => setStock(Number(e.target.value))}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500 font-bold"
                   required
                 />
               </div>
-
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Description</label>
-                <textarea
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  rows={3}
+                <label className="block text-xs font-medium text-slate-300 mb-1">Condition</label>
+                <select
+                  value={condition}
+                  onChange={e => setCondition(e.target.value as any)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500"
-                  placeholder="Detailed part specifications..."
-                  required
-                />
-              </div>
-
-              {/* Granular Payment Settings per Product */}
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-bold text-white text-sm flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-amber-500" /> Granular Payment Gateway Toggles (Admin Enabled)
-                    </h4>
-                    <p className="text-xs text-slate-400">Select which of the admin-enabled payment methods are accepted for this specific part ad.</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2">
-                  {paymentMethods.filter(p => p.enabled).map(pm => {
-                    const isSelected = selectedPaymentMethods.includes(pm.id);
-                    return (
-                      <button
-                        type="button"
-                        key={pm.id}
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedPaymentMethods(selectedPaymentMethods.filter(id => id !== pm.id));
-                          } else {
-                            setSelectedPaymentMethods([...selectedPaymentMethods, pm.id]);
-                          }
-                        }}
-                        className={`p-2.5 rounded-xl border text-left text-xs font-medium transition flex items-center justify-between ${
-                          isSelected ? 'bg-amber-500/10 border-amber-500 text-amber-300' : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                        }`}
-                      >
-                        <span className="truncate">{pm.name}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-medium transition"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-sm transition shadow-lg shadow-amber-500/20"
-                >
-                  {editingProduct ? 'Update Part' : 'Publish Part'}
-                </button>
+                  <option value="Brand New">Brand New</option>
+                  <option value="Original Used">Original Used (Jap)</option>
+                  <option value="OEM Replacement">OEM Replacement</option>
+                </select>
               </div>
-            </form>
-          </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1">Vehicle Compatibility (comma separated)</label>
+              <input
+                type="text"
+                value={compatibility}
+                onChange={e => setCompatibility(e.target.value)}
+                placeholder="e.g. Toyota Vitz 2012-2018, Toyota Yaris"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1">Image URL</label>
+              <input
+                type="text"
+                value={imageUrl}
+                onChange={e => setImageUrl(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1">Description</label>
+              <textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                rows={3}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500"
+                placeholder="Detailed part specifications..."
+                required
+              />
+            </div>
+
+            {/* Granular Payment Settings per Product */}
+            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-amber-500" /> Granular Payment Gateway Toggles (Admin Enabled)
+                  </h4>
+                  <p className="text-xs text-slate-400">Select which of the admin-enabled payment methods are accepted for this specific part ad.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2">
+                {paymentMethods.filter(p => p.enabled).map(pm => {
+                  const isSelected = selectedPaymentMethods.includes(pm.id);
+                  return (
+                    <button
+                      type="button"
+                      key={pm.id}
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedPaymentMethods(selectedPaymentMethods.filter(id => id !== pm.id));
+                        } else {
+                          setSelectedPaymentMethods([...selectedPaymentMethods, pm.id]);
+                        }
+                      }}
+                      className={`p-2.5 rounded-xl border text-left text-xs font-medium transition flex items-center justify-between ${
+                        isSelected ? 'bg-amber-500/10 border-amber-500 text-amber-300' : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <span className="truncate">{pm.name}</span>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-medium transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-sm transition shadow-lg shadow-amber-500/20"
+              >
+                {editingProduct ? 'Update Part' : 'Publish Part'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
-      {/* RECEIPT MODAL VIEWER */}
+      {/* RECEIPT INLINE INSPECTOR SECTION */}
       {selectedReceipt && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <span className="text-xs font-mono text-amber-400">{selectedReceipt.orderId}</span>
-                <h3 className="text-lg font-bold text-white">Buyer Receipt Verification</h3>
-              </div>
-              <button 
-                onClick={() => setSelectedReceipt(null)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800"
-              >
-                <X className="w-5 h-5" />
-              </button>
+        <div className="bg-slate-900 border-2 border-amber-500/40 rounded-2xl p-6 md:p-8 shadow-2xl space-y-6 animate-fadeIn">
+          <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+            <div>
+              <span className="text-xs font-mono text-amber-400 font-bold">{selectedReceipt.orderId}</span>
+              <h3 className="text-xl font-extrabold text-white">Buyer Receipt Verification & Inspection (Inline Page)</h3>
             </div>
+            <button
+              onClick={() => setSelectedReceipt(null)}
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition"
+            >
+              Close Inspector
+            </button>
+          </div>
 
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-1">
-              <div><span className="text-slate-400">Buyer:</span> <strong className="text-white">{selectedReceipt.buyerName}</strong></div>
-              <div><span className="text-slate-400">Payment Gateway:</span> <strong className="text-amber-400">{selectedReceipt.paymentMethod}</strong></div>
-              <div><span className="text-slate-400">Total Amount:</span> <strong className="text-emerald-400">ETB {selectedReceipt.totalAmount.toLocaleString()}</strong></div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div className="bg-slate-950 p-6 rounded-xl border border-slate-800 space-y-4 text-xs">
+              <div><span className="text-slate-400">Buyer Name:</span> <strong className="text-white text-sm">{selectedReceipt.buyerName}</strong></div>
+              <div><span className="text-slate-400">Payment Gateway:</span> <strong className="text-amber-400 text-sm">{selectedReceipt.paymentMethod}</strong></div>
+              <div><span className="text-slate-400">Total Amount:</span> <strong className="text-emerald-400 text-sm">ETB {selectedReceipt.totalAmount.toLocaleString()}</strong></div>
+              <p className="text-slate-400 leading-relaxed">
+                Verify the payment receipt screenshot below against your bank account or mobile money statement. Once verified, change the order status to verified and dispatch/deliver.
+              </p>
 
-            <div className="border border-slate-800 rounded-xl overflow-hidden bg-black flex items-center justify-center h-72">
-              <img src={selectedReceipt.imageUrl} alt="Receipt Screenshot" className="max-h-full max-w-full object-contain" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <button
-                onClick={() => {
-                  verifyOrderReceipt(selectedReceipt.orderId, 'verified');
-                  setSelectedReceipt(null);
-                }}
-                className="py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
-              >
-                <Check className="w-4 h-4" /> Verify Payment
-              </button>
-              <button
-                onClick={() => {
-                  const reason = prompt('Enter rejection reason:', 'Invalid receipt screenshot.');
-                  if (reason !== null) {
-                    verifyOrderReceipt(selectedReceipt.orderId, 'rejected', reason);
+              <div className="grid grid-cols-2 gap-3 pt-4">
+                <button
+                  onClick={() => {
+                    verifyOrderReceipt(selectedReceipt.orderId, 'verified');
                     setSelectedReceipt(null);
-                  }
-                }}
-                className="py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-red-600/20 flex items-center justify-center gap-2"
-              >
-                <X className="w-4 h-4" /> Reject Receipt
-              </button>
+                  }}
+                  className="py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2"
+                >
+                  <Check className="w-4 h-4" /> Verify Payment
+                </button>
+                <button
+                  onClick={() => {
+                    const reason = prompt('Enter rejection reason:', 'Invalid receipt screenshot.');
+                    if (reason !== null) {
+                      verifyOrderReceipt(selectedReceipt.orderId, 'rejected', reason);
+                      setSelectedReceipt(null);
+                    }
+                  }}
+                  className="py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2"
+                >
+                  <X className="w-4 h-4" /> Reject Receipt
+                </button>
+              </div>
+            </div>
+
+            <div className="border border-slate-800 rounded-xl overflow-hidden bg-black flex items-center justify-center h-80">
+              <img src={selectedReceipt.imageUrl} alt="Receipt Screenshot" className="max-h-full max-w-full object-contain" />
             </div>
           </div>
         </div>

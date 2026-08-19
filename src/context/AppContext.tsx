@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Merchant, PaymentMethodConfig, Product, Category, Order, UserRole, OrderItem } from '@/types';
+import { User, Merchant, PaymentMethodConfig, Product, Category, Order, UserRole, OrderItem, AdminCommissionAccount } from '@/types';
 import { INITIAL_USERS, INITIAL_MERCHANTS, INITIAL_PAYMENT_METHODS, INITIAL_CATEGORIES, INITIAL_PRODUCTS, INITIAL_ORDERS } from '@/data/mockData';
 
 interface CartItem {
@@ -16,6 +16,9 @@ interface AppContextType {
   paymentMethods: PaymentMethodConfig[];
   adminCommissionPaymentMethodId: string;
   setAdminCommissionPaymentMethodId: (id: string) => void;
+  adminCommissionAccount: AdminCommissionAccount;
+  updateAdminCommissionAccount: (paymentMethodId: string, accountName: string, accountNumber: string) => void;
+  updatePaymentMethodConfig: (id: string, name: string, accountNumber: string, accountName: string) => void;
   categories: Category[];
   products: Product[];
   orders: Order[];
@@ -25,7 +28,8 @@ interface AppContextType {
   switchUserRole: (role: UserRole, merchantId?: string) => void;
   togglePaymentMethod: (id: string) => void;
   verifyOrderReceipt: (orderId: string, status: 'verified' | 'rejected', reason?: string) => void;
-  payOrderCommission: (orderId: string, txRef?: string) => void;
+  payOrderCommission: (orderId: string, txRef: string, receiptImage?: string) => void;
+  verifyCommissionPayment: (orderId: string, status: 'paid' | 'rejected') => void;
   updateFulfillmentStatus: (orderId: string, status: Order['fulfillmentStatus']) => void;
   addProduct: (product: Omit<Product, 'id' | 'createdAt'>) => void;
   updateProduct: (product: Product) => void;
@@ -48,6 +52,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [merchants, setMerchants] = useState<Merchant[]>(INITIAL_MERCHANTS);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodConfig[]>(INITIAL_PAYMENT_METHODS);
   const [adminCommissionPaymentMethodId, setAdminCommissionPaymentMethodId] = useState<string>('telebirr');
+  const [adminCommissionAccount, setAdminCommissionAccount] = useState<AdminCommissionAccount>(() => {
+    const defaultPm = INITIAL_PAYMENT_METHODS[0];
+    return {
+      paymentMethodId: 'telebirr',
+      accountName: defaultPm?.accountName || 'EthioParts Platform Admin',
+      accountNumber: defaultPm?.accountNumber || '+251 91 100 2030'
+    };
+  });
   const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
@@ -121,6 +133,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPaymentMethods(prev => prev.map(pm => pm.id === id ? { ...pm, enabled: !pm.enabled } : pm));
   };
 
+  const updateAdminCommissionAccount = (paymentMethodId: string, accountName: string, accountNumber: string) => {
+    setAdminCommissionAccount({ paymentMethodId, accountName, accountNumber });
+    setAdminCommissionPaymentMethodId(paymentMethodId);
+  };
+
+  const updatePaymentMethodConfig = (id: string, name: string, accountNumber: string, accountName: string) => {
+    setPaymentMethods(prev => prev.map(pm => pm.id === id ? { ...pm, name, accountNumber, accountName } : pm));
+  };
+
   const verifyOrderReceipt = (orderId: string, status: 'verified' | 'rejected', reason?: string) => {
     setOrders(prev => prev.map(ord => ord.id === orderId ? {
       ...ord,
@@ -137,6 +158,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       commissionPaidAt: new Date().toISOString(),
       commissionTxRef: txRef || `TX-${Date.now()}`
     } : ord));
+  };
+
+  const verifyCommissionPayment = (orderId: string, status: 'paid' | 'rejected') => {
+    setOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, commissionStatus: status } : ord));
   };
 
   const updateFulfillmentStatus = (orderId: string, status: Order['fulfillmentStatus']) => {
@@ -275,6 +300,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       paymentMethods,
       adminCommissionPaymentMethodId,
       setAdminCommissionPaymentMethodId,
+      adminCommissionAccount,
+      updateAdminCommissionAccount,
+      updatePaymentMethodConfig,
       categories,
       products,
       orders,
@@ -285,6 +313,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       togglePaymentMethod,
       verifyOrderReceipt,
       payOrderCommission,
+      verifyCommissionPayment,
       updateFulfillmentStatus,
       addProduct,
       updateProduct,
