@@ -48,6 +48,17 @@ export const AdminDashboard: React.FC = () => {
 
   const selectedAdminPM = paymentMethods.find(p => p.id === adminCommissionPaymentMethodId);
 
+  const [adminAccNameInput, setAdminAccNameInput] = useState(selectedAdminPM?.accountName || 'EthioParts Admin');
+  const [adminAccNumberInput, setAdminAccNumberInput] = useState(selectedAdminPM?.accountNumber || '+251 91 100 2030');
+
+  // Sync inputs when selected gateway changes
+  React.useEffect(() => {
+    if (selectedAdminPM) {
+      setAdminAccNameInput(selectedAdminPM.accountName);
+      setAdminAccNumberInput(selectedAdminPM.accountNumber);
+    }
+  }, [adminCommissionPaymentMethodId]);
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 animate-fadeIn">
       {/* Admin Header */}
@@ -146,13 +157,13 @@ export const AdminDashboard: React.FC = () => {
               Select which payment gateway merchants must use to remit the 10% platform commission within 3 days of receiving customer funds.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-slate-950 p-4 rounded-xl border border-slate-800">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-slate-950 p-5 rounded-xl border border-slate-800">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Commission Payment Gateway</label>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Commission Gateway</label>
                 <select
                   value={adminCommissionPaymentMethodId}
                   onChange={e => setAdminCommissionPaymentMethodId(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500 font-bold"
                 >
                   {paymentMethods.filter(p => p.enabled).map(pm => (
                     <option key={pm.id} value={pm.id}>{pm.name}</option>
@@ -160,16 +171,37 @@ export const AdminDashboard: React.FC = () => {
                 </select>
               </div>
 
-              <div className="text-xs text-slate-300 space-y-1 bg-slate-900 p-3 rounded-xl border border-slate-800">
-                <div><span className="text-slate-400">Designated Account Name:</span> {selectedAdminPM?.accountName}</div>
-                <div><span className="text-slate-400">Designated Number:</span> <strong className="text-amber-400 font-mono">{selectedAdminPM?.accountNumber}</strong></div>
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Account Holder Name</label>
+                <input
+                  type="text"
+                  value={adminAccNameInput}
+                  onChange={e => setAdminAccNameInput(e.target.value)}
+                  placeholder="EthioParts Admin"
+                  className="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500 font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Account Number / Mobile Phone</label>
+                <input
+                  type="text"
+                  value={adminAccNumberInput}
+                  onChange={e => setAdminAccNumberInput(e.target.value)}
+                  placeholder="+251 91 100 2030"
+                  className="w-full bg-slate-900 border border-slate-700 text-amber-300 font-mono text-xs font-bold rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500"
+                />
               </div>
 
               <button
-                onClick={() => alert(`Admin commission payout account updated to ${selectedAdminPM?.name}. All merchants have been notified to remit their 10% commission here within 3 days.`)}
+                type="button"
+                onClick={() => {
+                  updatePaymentMethodConfig(adminCommissionPaymentMethodId, selectedAdminPM?.name || 'Telebirr', adminAccNumberInput, adminAccNameInput);
+                  alert(`Admin commission payout account details saved successfully for ${selectedAdminPM?.name}!`);
+                }}
                 className="py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition shadow-lg shadow-amber-500/20"
               >
-                Save Commission Account
+                Save Admin Details
               </button>
             </div>
           </div>
