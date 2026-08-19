@@ -2,3 +2,7 @@
 artifacts/
 node_modules
 .env
+.next
+deploy-cf.mjs
+
+
