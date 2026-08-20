@@ -19,6 +19,8 @@ interface AppContextType {
   adminCommissionAccount: AdminCommissionAccount;
   updateAdminCommissionAccount: (paymentMethodId: string, accountName: string, accountNumber: string) => void;
   updatePaymentMethodConfig: (id: string, name: string, accountNumber: string, accountName: string) => void;
+  platformCommissionRate: number;
+  setPlatformCommissionRate: (rate: number) => void;
   categories: Category[];
   products: Product[];
   orders: Order[];
@@ -64,6 +66,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [platformCommissionRate, setPlatformCommissionRate] = useState<number>(10);
   // Default to guest visitor (no dashboards shown until login)
   const [currentUser, setCurrentUser] = useState<User>({
     id: 'guest',
@@ -83,6 +86,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const savedAdminPm = localStorage.getItem('ethioparts_admin_pm_id');
       const savedMerchants = localStorage.getItem('ethioparts_merchants');
       const savedUser = localStorage.getItem('ethioparts_current_user');
+      const savedRate = localStorage.getItem('ethioparts_commission_rate');
 
       if (savedProducts) setProducts(JSON.parse(savedProducts));
       if (savedOrders) setOrders(JSON.parse(savedOrders));
@@ -90,6 +94,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (savedAdminPm) setAdminCommissionPaymentMethodId(JSON.parse(savedAdminPm));
       if (savedMerchants) setMerchants(JSON.parse(savedMerchants));
       if (savedUser) setCurrentUser(JSON.parse(savedUser));
+      if (savedRate) setPlatformCommissionRate(JSON.parse(savedRate));
     } catch (e) {
       console.error('Failed to load from localStorage', e);
     }
@@ -104,10 +109,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem('ethioparts_admin_pm_id', JSON.stringify(adminCommissionPaymentMethodId));
       localStorage.setItem('ethioparts_merchants', JSON.stringify(merchants));
       localStorage.setItem('ethioparts_current_user', JSON.stringify(currentUser));
+      localStorage.setItem('ethioparts_commission_rate', JSON.stringify(platformCommissionRate));
     } catch (e) {
       console.error('Failed to save to localStorage', e);
     }
-  }, [products, orders, paymentMethods, adminCommissionPaymentMethodId, merchants, currentUser]);
+  }, [products, orders, paymentMethods, adminCommissionPaymentMethodId, merchants, currentUser, platformCommissionRate]);
 
   const switchUserRole = (role: UserRole, merchantId?: string) => {
     const found = users.find(u => u.role === role && (!merchantId || u.merchantId === merchantId));
@@ -256,7 +262,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const createOrder = (shippingAddress: string, paymentMethodId: string, receiptImage?: string): Order => {
     const subtotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-    const commission = Math.round(subtotal * 0.10); // 10% platform commission
+    const commission = Math.round(subtotal * (platformCommissionRate / 100)); // dynamic platform commission rate
     const pm = paymentMethods.find(p => p.id === paymentMethodId);
 
     const items: OrderItem[] = cart.map(item => ({
@@ -303,6 +309,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       adminCommissionAccount,
       updateAdminCommissionAccount,
       updatePaymentMethodConfig,
+      platformCommissionRate,
+      setPlatformCommissionRate,
       categories,
       products,
       orders,

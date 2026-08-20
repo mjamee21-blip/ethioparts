@@ -18,7 +18,9 @@ export const AdminDashboard: React.FC = () => {
     deleteProduct,
     adminCommissionPaymentMethodId,
     setAdminCommissionPaymentMethodId,
-    updatePaymentMethodConfig
+    updatePaymentMethodConfig,
+    platformCommissionRate,
+    setPlatformCommissionRate
   } = useApp();
 
   const [adminSubTab, setAdminSubTab] = useState<'overview' | 'payments' | 'supervision' | 'merchants' | 'catalog'>('overview');
@@ -26,6 +28,24 @@ export const AdminDashboard: React.FC = () => {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryDesc, setNewCategoryDesc] = useState('');
   const [pmEdits, setPmEdits] = useState<Record<string, { name: string; accountNumber: string; accountName: string }>>({});
+  const [commissionRateInput, setCommissionRateInput] = useState(platformCommissionRate);
+
+  const selectedAdminPM = paymentMethods.find(p => p.id === adminCommissionPaymentMethodId);
+
+  const [adminAccNameInput, setAdminAccNameInput] = useState(selectedAdminPM?.accountName || 'EthioParts Admin');
+  const [adminAccNumberInput, setAdminAccNumberInput] = useState(selectedAdminPM?.accountNumber || '+251 91 100 2030');
+
+  // Sync inputs when selected gateway changes
+  React.useEffect(() => {
+    if (selectedAdminPM) {
+      setAdminAccNameInput(selectedAdminPM.accountName);
+      setAdminAccNumberInput(selectedAdminPM.accountNumber);
+    }
+  }, [adminCommissionPaymentMethodId]);
+
+  React.useEffect(() => {
+    setCommissionRateInput(platformCommissionRate);
+  }, [platformCommissionRate]);
 
   // Statistics calculation
   const totalOrdersValue = orders.reduce((sum, o) => sum + o.totalAmount, 0);
@@ -145,6 +165,39 @@ export const AdminDashboard: React.FC = () => {
               </div>
               <div className="text-2xl font-bold text-white">{activeMerchantsCount} / {merchants.length}</div>
               <p className="text-xs text-emerald-400 mt-1">Merkato & Bole hubs</p>
+            </div>
+          </div>
+
+          {/* Platform Commission Rate Setting */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-amber-500" /> Platform Commission Rate (%)
+            </h3>
+            <p className="text-xs text-slate-400">
+              Enter the commission percentage charged on all marketplace orders (e.g. 10 for 10%, 5 for 5%).
+            </p>
+            <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+              <div className="w-full sm:w-48">
+                <label className="block text-xs font-medium text-slate-300 mb-1">Commission Rate (%)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={commissionRateInput}
+                  onChange={e => setCommissionRateInput(Number(e.target.value))}
+                  className="w-full bg-slate-900 border border-slate-700 text-amber-400 font-bold text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setPlatformCommissionRate(commissionRateInput);
+                  alert(`Platform commission rate updated to ${commissionRateInput}% successfully!`);
+                }}
+                className="w-full sm:w-auto mt-0 sm:mt-5 px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition shadow-lg shadow-amber-500/20"
+              >
+                Save Commission Rate
+              </button>
             </div>
           </div>
 
