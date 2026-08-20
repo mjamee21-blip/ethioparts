@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Search, Filter, Eye, ShoppingCart, Star, ShieldCheck, MapPin } from 'lucide-react';
+import { Search, Filter, Eye, ShoppingCart, Star, ShieldCheck, MapPin, Car } from 'lucide-react';
 import { Product } from '@/types';
 
 export const BuyerCatalog: React.FC<{ onSelectProduct: (p: Product) => void }> = ({ onSelectProduct }) => {
@@ -12,7 +12,10 @@ export const BuyerCatalog: React.FC<{ onSelectProduct: (p: Product) => void }> =
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedMerchant, setSelectedMerchant] = useState('All');
   const [selectedCondition, setSelectedCondition] = useState('All');
-  const [maxPrice, setMaxPrice] = useState(20000);
+  const [selectedMake, setSelectedMake] = useState('All');
+  const [maxPrice, setMaxPrice] = useState(30000);
+
+  const vehicleMakes = ['All', 'Toyota', 'Isuzu', 'Bajaj', 'Hyundai', 'Nissan', 'Suzuki'];
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -21,17 +24,40 @@ export const BuyerCatalog: React.FC<{ onSelectProduct: (p: Product) => void }> =
     const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
     const matchesMerchant = selectedMerchant === 'All' || p.merchantId === selectedMerchant;
     const matchesCondition = selectedCondition === 'All' || p.condition === selectedCondition;
+    const matchesMake = selectedMake === 'All' || p.compatibility.some(c => c.toLowerCase().includes(selectedMake.toLowerCase())) || p.name.toLowerCase().includes(selectedMake.toLowerCase());
     const matchesPrice = p.price <= maxPrice;
 
-    return matchesSearch && matchesCategory && matchesMerchant && matchesCondition && matchesPrice;
+    return matchesSearch && matchesCategory && matchesMerchant && matchesCondition && matchesMake && matchesPrice;
   });
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
       {/* Catalog Header */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-        <h1 className="text-3xl font-extrabold text-white">Ethiopian Auto Parts Catalog</h1>
-        <p className="text-slate-400 text-sm mt-1">Filter by vehicle make, model, category, condition, and merchant hub across Ethiopia.</p>
+      <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-white">Ethiopian Auto Parts Catalog</h1>
+          <p className="text-slate-400 text-sm mt-1">Filter by vehicle make (Toyota, Isuzu, Bajaj, Hyundai), model, category, condition, and merchant hub across Ethiopia.</p>
+        </div>
+
+        {/* Quick Vehicle Make Filter Buttons */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2">
+          <span className="text-xs font-bold text-amber-400 flex items-center gap-1 flex-shrink-0">
+            <Car className="w-4 h-4" /> Popular Makes:
+          </span>
+          {vehicleMakes.map(make => (
+            <button
+              key={make}
+              onClick={() => setSelectedMake(make)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex-shrink-0 ${
+                selectedMake === make
+                  ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
+                  : 'bg-slate-950 text-slate-300 hover:bg-slate-800 border border-slate-800'
+              }`}
+            >
+              {make}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -47,7 +73,8 @@ export const BuyerCatalog: React.FC<{ onSelectProduct: (p: Product) => void }> =
                 setSelectedCategory('All');
                 setSelectedMerchant('All');
                 setSelectedCondition('All');
-                setMaxPrice(20000);
+                setSelectedMake('All');
+                setMaxPrice(30000);
               }}
               className="text-xs text-amber-400 hover:underline"
             >
@@ -124,7 +151,7 @@ export const BuyerCatalog: React.FC<{ onSelectProduct: (p: Product) => void }> =
             <input
               type="range"
               min={500}
-              max={30000}
+              max={50000}
               step={500}
               value={maxPrice}
               onChange={e => setMaxPrice(Number(e.target.value))}

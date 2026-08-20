@@ -1,4 +1,9 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
+  "/api/auth/register/route": "app/api/auth/register/route.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/api/auth/verify/route": "app/api/auth/verify/route.js",
+  "/api/payments/cbe/route": "app/api/payments/cbe/route.js",
+  "/api/payments/telebirr/route": "app/api/payments/telebirr/route.js",
   "/page": "app/page.js"
 }

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Store, Package, Plus, DollarSign, Clock, CheckCircle2, XCircle, Truck, CreditCard, Edit, Trash2, X, Check, Phone, Settings, AlertCircle } from 'lucide-react';
+import { Store, Package, Plus, DollarSign, Clock, CheckCircle2, XCircle, Truck, CreditCard, Edit, Trash2, X, Check, Phone, Settings, AlertCircle, Upload, FileSpreadsheet } from 'lucide-react';
 import { Product, Order } from '@/types';
 
 export const MerchantDashboard: React.FC = () => {
@@ -27,6 +27,56 @@ export const MerchantDashboard: React.FC = () => {
   const merchantOrders = orders.filter(o => o.items.some(item => item.merchantId === merchant.id));
 
   const adminPM = paymentMethods.find(p => p.id === adminCommissionPaymentMethodId);
+
+  const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split('\n');
+      let addedCount = 0;
+      const startIndex = lines[0].toLowerCase().includes('name') ? 1 : 0;
+      for (let i = startIndex; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const cols = line.split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
+        if (cols.length >= 6) {
+          const [partName, partNum, cat, priceVal, stockVal, cond, comp, desc, img] = cols;
+          addProduct({
+            merchantId: merchant.id,
+            merchantName: merchant.name,
+            name: partName || 'Imported Auto Part',
+            partNumber: partNum || `PART-${Math.floor(1000 + Math.random() * 9000)}`,
+            category: cat || 'Engine & Components',
+            price: Number(priceVal) || 1500,
+            stock: Number(stockVal) || 10,
+            condition: (cond as any) || 'Brand New',
+            compatibility: comp ? comp.split(';').map(s => s.trim()) : ['Toyota Hilux'],
+            description: desc || 'Imported via CSV bulk upload',
+            imageUrl: img || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=600&q=80',
+            enabledPaymentMethods: paymentMethods.filter(p => p.enabled).map(p => p.id)
+          });
+          addedCount++;
+        }
+      }
+      alert(`Successfully imported ${addedCount} auto parts via CSV bulk upload!`);
+    };
+    reader.readAsText(file);
+  };
+
+  const downloadCsvTemplate = () => {
+    const csvContent = "data:text/csv;charset=utf-8,Name,PartNumber,Category,Price,Stock,Condition,Compatibility,Description,ImageURL\n" +
+      "Toyota Hilux Brake Pad,TOY-BP-01,Brakes,3500,25,Brand New,Toyota Hilux 2016-2023;Toyota Fortuner,Genuine ceramic brake pads,https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=600&q=80\n" +
+      "Isuzu NPR Clutch Disc,ISU-CD-05,Transmission,8500,12,OEM Replacement,Isuzu NPR;Isuzu NQR,Heavy duty clutch disc,https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=600&q=80";
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "ethioparts_bulk_upload_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -158,12 +208,25 @@ export const MerchantDashboard: React.FC = () => {
           <h1 className="text-2xl md:text-3xl font-extrabold text-white">{merchant.name}</h1>
           <p className="text-slate-400 text-sm mt-1">Owner: {merchant.ownerName} | Rating: ★ {merchant.rating} ({merchantProducts.length} Active Parts)</p>
         </div>
-        <button
-          onClick={openAddModal}
-          className="px-5 py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 flex items-center gap-2 transition transform active:scale-95"
-        >
-          <Plus className="w-5 h-5" /> Add New Auto Part
-        </button>
+        <div className="flex items-center gap-3">
+          <label className="cursor-pointer px-4 py-3 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold rounded-xl shadow border border-slate-700 flex items-center gap-2 transition text-xs">
+            <Upload className="w-4 h-4" /> Bulk CSV Upload
+            <input type="file" accept=".csv" onChange={handleCsvUpload} className="hidden" />
+          </label>
+          <button
+            onClick={downloadCsvTemplate}
+            className="px-3 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl shadow border border-slate-700 flex items-center gap-1.5 transition text-xs"
+            title="Download CSV Template"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-400" /> Template
+          </button>
+          <button
+            onClick={openAddModal}
+            className="px-5 py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 flex items-center gap-2 transition transform active:scale-95 text-xs"
+          >
+            <Plus className="w-4 h-4" /> Add Part
+          </button>
+        </div>
       </div>
 
       {/* COMMISSION & 3-DAY PAYOUT TO ADMIN NOTICE */}

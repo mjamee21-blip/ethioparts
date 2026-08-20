@@ -23,10 +23,11 @@ export const AuthModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ 
 
   if (!isOpen) return null;
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
+    // Quick demo fallback shortcuts
     if (usernameOrEmail === 'siris888' && password === 'Passw0rd') {
       switchUserRole('admin');
       setActiveTab('admin');
@@ -46,72 +47,85 @@ export const AuthModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ 
       return;
     }
 
-    const found = users.find(
-      u => (u.username === usernameOrEmail || u.email === usernameOrEmail) && u.password === password
-    );
-
-    if (found) {
-      switchUserRole(found.role, found.merchantId);
-      setActiveTab(found.role === 'admin' ? 'admin' : found.role === 'merchant' ? 'merchant' : 'home');
-      onClose();
-    } else {
-      setError('Invalid username/email or password. Please check your credentials or register.');
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: usernameOrEmail, password })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        switchUserRole(data.user.role, data.user.merchantId);
+        setActiveTab(data.user.role === 'admin' ? 'admin' : data.user.role === 'merchant' ? 'merchant' : 'home');
+        onClose();
+      } else {
+        setError(data.error?.message || 'Invalid credentials');
+      }
+    } catch (err: any) {
+      setError('Network error during login');
     }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     if (!regName || !regEmail || !regPassword) {
       setError('Please fill in all registration fields.');
       return;
     }
-    setMode('verify');
-    setSuccessMsg(`Verification email dispatched to ${regEmail}. Please enter verification code '123456'.`);
-  };
 
-  const handleVerify = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (verificationCode === '123456') {
-      const newUser: UserType = {
-        id: `usr-${Date.now()}`,
-        name: regName,
-        email: regEmail,
-        username: regEmail.split('@')[0],
-        password: regPassword,
-        role: regRole,
-        merchantId: regRole === 'merchant' ? `mch-${Date.now()}` : undefined,
-        verified: true,
-        joinedDate: new Date().toISOString().split('T')[0]
-      };
-      users.push(newUser);
-      switchUserRole(regRole, newUser.merchantId);
-      setActiveTab(regRole === 'merchant' ? 'merchant' : 'home');
-      alert('Email verified successfully! Welcome to EthioParts.');
-      onClose();
-    } else {
-      setError('Invalid verification code. Enter 123456 for simulation.');
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: regName, email: regEmail, password: regPassword, role: regRole })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setMode('verify');
+        setSuccessMsg(`Verification email dispatched to ${regEmail}. Verification code: ${data.verificationCode}`);
+      } else {
+        setError(data.error?.message || 'Registration failed');
+      }
+    } catch (err: any) {
+      setError('Network error during registration');
     }
   };
 
-  const handleGoogleRegistration = () => {
-    const googleName = 'Google User (' + Math.floor(100 + Math.random() * 900) + ')';
-    const googleEmail = 'googleuser' + Math.floor(1000 + Math.random() * 9000) + '@gmail.com';
-    const newUser: UserType = {
-      id: `usr-${Date.now()}`,
-      name: googleName,
-      email: googleEmail,
-      username: googleEmail.split('@')[0],
-      password: 'google-oauth-secure',
-      role: regRole,
-      merchantId: regRole === 'merchant' ? `mch-${Date.now()}` : undefined,
-      verified: true,
-      joinedDate: new Date().toISOString().split('T')[0]
-    };
-    users.push(newUser);
-    switchUserRole(regRole, newUser.merchantId);
-    setActiveTab(regRole === 'merchant' ? 'merchant' : 'home');
-    alert(`Successfully registered and logged in with Google as ${googleEmail}!`);
-    onClose();
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    try {
+      const res = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: regEmail })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const newUser: UserType = {
+          id: `usr-${Date.now()}`,
+          name: regName,
+          email: regEmail,
+          username: regEmail.split('@')[0],
+          password: regPassword,
+          role: regRole,
+          merchantId: regRole === 'merchant' ? `mch-${Date.now()}` : undefined,
+          verified: true,
+          joinedDate: new Date().toISOString().split('T')[0]
+        };
+        users.push(newUser);
+        switchUserRole(regRole, newUser.merchantId);
+        setActiveTab(regRole === 'merchant' ? 'merchant' : 'home');
+        alert('Email verified successfully! Welcome to EthioParts.');
+        onClose();
+      } else {
+        setError(data.error?.message || 'Verification failed');
+      }
+    } catch (err: any) {
+      setError('Network error during verification');
+    }
   };
 
   const fillCredentials = (user: string, pass: string) => {
@@ -283,15 +297,6 @@ export const AuthModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ 
               className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition shadow-lg shadow-amber-500/20"
             >
               Continue & Verify Email
-            </button>
-
-            {/* Google Signup Simulation */}
-            <button
-              type="button"
-              onClick={handleGoogleRegistration}
-              className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-medium transition flex items-center justify-center gap-2 border border-slate-700"
-            >
-              <span className="font-bold text-amber-400">G</span> Sign up instantly with Google
             </button>
 
             <div className="text-center pt-2">
