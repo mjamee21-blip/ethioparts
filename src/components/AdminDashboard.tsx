@@ -66,19 +66,6 @@ export const AdminDashboard: React.FC = () => {
     alert('New category added successfully!');
   };
 
-  const selectedAdminPM = paymentMethods.find(p => p.id === adminCommissionPaymentMethodId);
-
-  const [adminAccNameInput, setAdminAccNameInput] = useState(selectedAdminPM?.accountName || 'EthioParts Admin');
-  const [adminAccNumberInput, setAdminAccNumberInput] = useState(selectedAdminPM?.accountNumber || '+251 91 100 2030');
-
-  // Sync inputs when selected gateway changes
-  React.useEffect(() => {
-    if (selectedAdminPM) {
-      setAdminAccNameInput(selectedAdminPM.accountName);
-      setAdminAccNumberInput(selectedAdminPM.accountNumber);
-    }
-  }, [adminCommissionPaymentMethodId]);
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 animate-fadeIn">
       {/* Admin Header */}
