@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { AppProvider } from '@/context/AppContext';
+import { LiveChatWidget } from '@/components/LiveChatWidget';
 
 export const metadata = {
   title: 'EthioParts - Ethiopian Auto Parts E-Commerce Platform',
@@ -17,6 +18,7 @@ export default function RootLayout({
       <body className="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased">
         <AppProvider>
           {children}
+          <LiveChatWidget />
         </AppProvider>
       </body>
     </html>
